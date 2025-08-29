@@ -52,3 +52,6 @@ lerna-debug.log*
 
 # Thumbnails
 ._*
+
+# Weather API Links
+/docs/weather.md
