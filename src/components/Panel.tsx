@@ -1,4 +1,6 @@
-/* What Panel will return; title is optional */
+{
+  /* What Panel will return; title is optional */
+}
 type PanelProps = {
   title?: string;
   children: React.ReactNode;
