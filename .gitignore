@@ -1,57 +1,65 @@
-# Node dependencies
-node_modules/
-
-# Build output
-dist/
-dist-ssr/
-*.local
-
-# Vite cache
-.vite/
-
 # Logs
+logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+node_modules
+node_modules/
+dist
+dist-ssr
+*.local
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea/
-.DS_Store
+.idea
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
-# Environment files
+# Local environment variables
+.env.local
 .env
-.env.*
-!.env.example
 
-# TypeScript
-*.tsbuildinfo
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
 
-# Misc
-*.log
+# Optional npm cache directory
+.npm
 
-# macOS system files
+# Optional eslint cache
+.eslintcache
+
+# Output of `npm pack`
+*.tgz
+
+# Temporary folders
+tmp/
+temp/
+
+#OS generated files
 .DS_Store
-.AppleDouble
-.LSOverride
-
-# Files that might appear on external disks
+.DS_Store?
+._*
 .Spotlight-V100
 .Trashes
+ehthumbs.db
+Thumbs.db
 
-# macOS generated metadata
-*.icloud
+# Backup files
+*~
+*.bak
+*.backup
+*.orig
 
-# Thumbnails
-._*
-
-# Weather API Links
-/docs/weather.md
+# Test output
+test-results/
