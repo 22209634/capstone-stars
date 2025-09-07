@@ -1,23 +1,33 @@
 .topbar {
+    margin: 0.24rem;
+    color: white;
+}
+
+.topbar__panel, .topbar__panel::before {
+    border-radius: 3px !important;
+}
+
+.topbar h1, .topbar p {
+    margin: 0;
+}
+
+.topbar__items-wrapper {
     position: sticky;
     top: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.5rem 1rem;
+    padding: 0.87rem 1rem;
+    width: auto;
+    box-sizing: border-box;
 }
 
-/* Move the status message towards the center */
-.topbar > :nth-child(3) {
-    margin-right: 15%;
-}
-
-.topbar > .playback-controls {
+.topbar__items-wrapper > .playback-controls {
     display: flex;
     gap: 0.3rem;
 }
 
-.topbar > .topbar-right {
+.topbar__items-wrapper > .topbar-right {
     display: flex;
     gap: 0.75rem;
 }
