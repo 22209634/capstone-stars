@@ -1,0 +1,9 @@
+.topbar {
+    margin: 0.24rem;
+}
+
+.topbar {
+    position: sticky;
+    top: 0;
+    width: auto;
+}

@@ -1,11 +1,9 @@
-import Topbar from "@/components/Topbar/Topbar.tsx"
-import TelescopeView from "@/components/TelescopeView/TelescopeView.tsx"
+import Dashboard from "@/pages/Dashboard/Dashboard.tsx";
 
 function App() {
   return (
     <main>
-        <TelescopeView />
-        <Topbar />
+        <Dashboard />
     </main>
   );
 }
