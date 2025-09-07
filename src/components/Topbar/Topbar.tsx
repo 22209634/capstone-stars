@@ -4,7 +4,7 @@ import './Topbar.css';
 
 export default function Topbar() {
     return (
-        <Panel className="topbar__panel">
+        <Panel className="topbar__panel" borderRadius="3px">
             <div className="topbar__items-wrapper">
                 <h1 className="logo">STARS System v0.1</h1>
                 <section className="playback-controls">

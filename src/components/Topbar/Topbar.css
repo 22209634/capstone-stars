@@ -2,10 +2,6 @@
     color: white;
 }
 
-.topbar__panel, .topbar__panel::before {
-    border-radius: 3px !important;
-}
-
 .topbar__panel h1, .topbar__panel p {
     margin: 0;
 }

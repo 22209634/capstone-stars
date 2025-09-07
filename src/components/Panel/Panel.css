@@ -1,6 +1,12 @@
 .panel {
     position: relative;
-    border-radius: 20px;
+}
+
+.panel-bg {
+    position: absolute;
+    inset: 0;
+    z-index: -10;
+    border-radius: var(--border-radius, 16px);
     isolation: isolate;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
@@ -10,23 +16,23 @@
 }
 
 /* Inner Shadow */
-.panel::before {
+.panel-bg::before {
     content: '';
     position: absolute;
     inset: 0;
     z-index: -11;
-    border-radius: 20px;
+    border-radius: var(--border-radius, 16px);
     box-shadow: inset 0 0 20px -5px rgba(255, 255, 255, 0.6);
     background: rgba(255, 255, 255, 0.05);
 }
 
 /* Backdrop Blur */
-.panel::after {
+.panel-bg::after {
     content: '';
     position: absolute;
     inset: 0;
     z-index: -12;
-    border-radius: 28px;
+    border-radius: calc(var(--border-radius, 16px) + 8px);
     backdrop-filter: blur(8px);
     filter: url(#glass-distortion);
     isolation: isolate;
