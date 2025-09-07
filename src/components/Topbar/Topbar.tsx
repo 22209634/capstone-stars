@@ -15,7 +15,7 @@ export default function Topbar() {
                 <p>Now Tracking: M31 (Andromeda Galaxy)</p>
             </section>
             <section className="topbar-right">
-                <input type="text" placeholder="Search..." />
+                <input type="text" placeholder=" Search..." />
                 <button><Camera /> Capture</button>
                 <button><Menu/> Menu</button>
             </section>
