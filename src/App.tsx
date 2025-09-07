@@ -1,9 +1,9 @@
-import Topbar from "./components/Topbar.tsx";
+import Topbar from "@/components/Topbar/Topbar.tsx"
 
 function App() {
   return (
     <main>
-      <Topbar />
+        <Topbar />
     </main>
   );
 }
