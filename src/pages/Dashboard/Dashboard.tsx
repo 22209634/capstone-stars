@@ -1,7 +1,8 @@
+import './Dashboard.css';
 import Topbar from "@/components/Topbar/Topbar.tsx"
 import TelescopeView from "@/components/TelescopeView/TelescopeView.tsx"
 import AllSkyView from "@/components/AllSkyView/AllSkyView.tsx"
-import './Dashboard.css';
+import SkyObjectList from "@/components/SkyObjectList/SkyObjectList.tsx"
 
 export default function Dashboard() {
     return (
@@ -14,7 +15,9 @@ export default function Dashboard() {
             </section>
             <div className="dashboard__menus">
                 <div className="dashboard__menus__left">
-                    <section className="object-list"></section>
+                    <section className="sky-object-list">
+                        <SkyObjectList />
+                    </section>
                     <section className="weather-data"></section>
                 </div>
                 <div className="dashboard__menus__right">
