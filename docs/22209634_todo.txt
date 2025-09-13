@@ -1,0 +1,6 @@
+# To-do if time permits
+
+1.
+- Refactor HTML so that the HTML works by itself by design, without needing CSS, then add the CSS in.
+    - Rationale: this will force good design practices for the HTML code, versus badly designed HTML code that is then fixed with CSS.
+    - Example: `<p>71%</p><p>Humidity</p>` whose order is then fixed with CSS, vs. `<p><span>Humidity</span>71%</p>` which makes more sense semantically and is easier to understand and maintain, and even saves more time when styling in CSS, for only a small added cost in time spent **thinking** about the HTML.
