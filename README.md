@@ -10,4 +10,6 @@ To run the project in development mode:
 
 4. Then, in the same directory, run `npm run dev`
 
-This README will be further updated when there is more of the project completed.
+Current Progress of Front-end:
+
+![alt text](/docs/progress-13-09-2025.png)
