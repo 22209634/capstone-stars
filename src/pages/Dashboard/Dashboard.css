@@ -32,5 +32,8 @@
 }
 
 .dashboard__menus__right {
+    display: flex;
+    flex-direction: column;
+    gap: 2.8rem;
     width: 25%;
 }
