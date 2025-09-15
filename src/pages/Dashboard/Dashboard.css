@@ -27,7 +27,7 @@
 .dashboard__menus__left {
     display: flex;
     flex-direction: column;
-    gap: 2.2rem;
+    gap: 2.8rem;
     width: 18%;
 }
 
