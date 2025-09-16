@@ -1,5 +1,5 @@
-import type {ReactNode} from 'react';
-import './Panel.css';
+import type {ReactNode} from 'react'
+import './Panel.css'
 
 interface PanelProps {
     children: ReactNode;

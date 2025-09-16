@@ -5,6 +5,7 @@ import AllSkyView from "@/components/AllSkyView/AllSkyView.tsx";
 import SkyObjectList from "@/components/SkyObjectList/SkyObjectList.tsx";
 import WeatherData from "@/components/WeatherData/WeatherData.tsx";
 import TelescopeStatus from "@/components/TelescopeStatus/TelescopeStatus.tsx";
+import TelescopeControls from "@/components/TelescopeControls/TelescopeControls.tsx";
 
 export default function Dashboard() {
     return (
@@ -31,7 +32,9 @@ export default function Dashboard() {
                     <section className="telescope-status">
                         <TelescopeStatus />
                     </section>
-                    <section className="telescope-controls"></section>
+                    <section className="telescope-controls">
+                        <TelescopeControls />
+                    </section>
                 </div>
             </div>
         </article>

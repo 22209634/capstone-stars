@@ -1,5 +1,5 @@
 .dashboard {
-    padding: 0.24rem;
+    height: 100%;
 }
 
 .topbar {
@@ -22,13 +22,15 @@
     display: flex;
     justify-content: space-between;
     padding: 1.2rem 0.6rem;
+    /* 100% - topbar height - padding */
+    height: calc(100% - 57px - 2.4rem)
 }
 
 .dashboard__menus__left {
     display: flex;
     flex-direction: column;
     gap: 2.8rem;
-    width: 18%;
+    width: 17.5%;
 }
 
 .dashboard__menus__right {
@@ -36,4 +38,9 @@
     flex-direction: column;
     gap: 2.8rem;
     width: 25%;
+}
+
+.telescope-status, .telescope-controls {
+    width: 70%;
+    margin-left: auto;
 }

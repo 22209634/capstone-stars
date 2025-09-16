@@ -1,7 +1,8 @@
-import { Camera } from 'lucide-react';
+import './Topbar.css'
 import Panel from '@/components/Panel/Panel.tsx'
+import Button from '@/components/Button/Button.tsx'
 import StatusLine from '@/components/Topbar/StatusLine/StatusLine.tsx'
-import './Topbar.css';
+import { Camera } from 'lucide-react'
 
 export default function Topbar() {
     return (
@@ -11,7 +12,7 @@ export default function Topbar() {
                 <StatusLine />
                 <div className="topbar-right">
                     <input type="text" placeholder=" Search..." />
-                    <button className="capture-btn"><Camera /> Capture</button>
+                    <Button className="capture-btn"><Camera /> Capture</Button>
                     {/* <button className="menu-btn"><Menu/> Menu</button> */}
                 </div>
             </div>

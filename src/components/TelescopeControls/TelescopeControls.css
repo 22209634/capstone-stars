@@ -1,0 +1,30 @@
+.telescope-controls__wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 0.24rem;
+}
+
+.telescope-controls__panel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 4rem;
+}
+
+.telescope-controls__up {
+    grid-row-start: 1;
+    grid-column-start: 2;
+}
+
+.telescope-controls__right {
+    grid-row-start: 2;
+}
+
+.telescope-controls__down {
+    grid-row-start: 2;
+}
+
+.telescope-controls__left {
+    grid-row-start: 2;
+}
