@@ -1,5 +1,8 @@
 import './TelescopeStatus.css'
 import Panel from '@/components/Panel/Panel.tsx'
+import { useLiveTelescopeData } from '@/hooks/useLiveTelescopeData'
+
+
 
 const mockData = {
     status: "Slewing",
@@ -10,6 +13,7 @@ const mockData = {
 }
 
 export default function TelescopeStatus() {
+    const liveData = useLiveTelescopeData();
     return (
         <div className="telescope-status__wrapper">
             <Panel className="telescope-status__panel" borderRadius="3px">
@@ -25,8 +29,8 @@ export default function TelescopeStatus() {
             </Panel>
             <Panel className="telescope-status__panel" borderRadius="3px">
                 <div className="telescope-status__item">
-                    <p><span>Altitude</span> {mockData.altitude}</p>
-                    <p><span>Azimuth</span> {mockData.azimuth}</p>
+                    <p><span>Altitude</span> {liveData.altitude}</p>
+                    <p><span>Azimuth</span> {liveData.azimuth}</p>
                 </div>
             </Panel>
         </div>
