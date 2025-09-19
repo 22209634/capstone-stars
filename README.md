@@ -12,4 +12,4 @@ To run the project in development mode:
 
 Current Progress of Front-end:
 
-![progress video](/docs/progress-19-09-2025.mp4)
+https://github.com/user-attachments/assets/16257d3d-615e-4bea-b79e-8c942b7df4d7
