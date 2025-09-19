@@ -18,11 +18,7 @@ export default function TelescopeControls() {
             console.log('Telescope not ready yet');
         }
     };
-
-    const testClick = () => {
-        console.log('Button clicked - test function');
-    };
-
+    
     return (
         <div className="telescope-controls__wrapper">
             <Button
