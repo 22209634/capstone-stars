@@ -12,4 +12,4 @@ To run the project in development mode:
 
 Current Progress of Front-end:
 
-![alt text](/docs/progress-13-09-2025.png)
+![progress video](/docs/progress-19-09-2025.mp4)
