@@ -1,3 +1,3 @@
-from astroquery.simbad import SIMBAD
-result = SIMBAD.query_object("M42")
+from astroquery.simbad import Simbad
+result = Simbad.query_object("M42")
 print(result)
