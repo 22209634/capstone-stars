@@ -58,7 +58,7 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
     name = names[i].decode("utf-8") if hasattr(names[i], "decode") else str(names[i])
     m = float (mag_arr[i]) if np.isfinite(mag_arr[i]) else None
     visible.append({
-      "names": names,
+      "name": name,
       "otype": str(otype[i]),
       "ra": float(coords.ra.deg[i]),
       "dec": float(coords.dec.deg[i]),
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     print(f"Visible objects (minimum altitude = {min_alt_deg}°, magnitude <= {magnitude}): {len(objects)}\n")
     print("Preview")
     for obj in objects[:5]:
-      print(f" {obj['names']} | RA = {obj['ra']:.2f}° | Dec = {obj['dec']:.2f}° | alt = {obj['alt']:.1f}° | az = {obj['az']:.1f}° | magnitude = {obj['magnitude']}")
+      print(f" {obj['name']} | RA = {obj['ra']:.2f}° | Dec = {obj['dec']:.2f}° | alt = {obj['alt']:.1f}° | az = {obj['az']:.1f}° | magnitude = {obj['magnitude']}")
 
 
 
