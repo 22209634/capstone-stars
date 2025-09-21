@@ -21,7 +21,7 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
 
   sim = Simbad()
   sim.row_limit = row_limit
-  sim.add_votable_fields("ra", "dec", "flux(V)", "otype")
+  sim.add_votable_fields("ra", "dec", "V", "otype")
 
   print(f"Querying SIMBAD hemisphere @ {observation}...")
   result = sim.query_region(center_icrs, radius = "8d")
@@ -39,7 +39,7 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
     coords = SkyCoord(ra = result[ra_col], dec = result[dec_col], unit = (u.hourangle, u.deg), frame = "icrs")
     
   aa = coords.transform_to(altaz)
-  mag = result["FLUX_V"] if "FLUX_V" in result.colnames else np.array([np.nan]*len(result))
+  mag = result["V"] if "V" in result.colnames else np.array([np.nan]*len(result))
   otype = result["OTYPE"] if "OTYPE" in result.colnames else np.array(["?"]*len(result))
   if "MAIN_ID" in result.colnames:
     names = result["MAIN_ID"]
