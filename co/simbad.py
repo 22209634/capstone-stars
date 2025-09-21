@@ -7,7 +7,7 @@ import numpy as np
 lat, lon = -37.7, 145.05
 min_alt_deg = 30.0
 magnitude = 6.5
-row_limit = 10000
+row_limit = 300
 current_time = True 
 
 def visible_objects_bundoora(min_alt_deg, magnitude):
@@ -53,7 +53,7 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
       "az": float(aa.az.deg[i]),
       "vmag": m
     })
-    return visible
+ return visible
 
 
 if __name__ == "__main__":
