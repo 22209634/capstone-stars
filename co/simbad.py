@@ -21,7 +21,7 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
 
   sim = Simbad()
   sim.row_limit = row_limit
-  sim.add_votable_fields("flux(V)", "otype")
+  sim.add_votable_fields("ra(d)", "dec(d)", "flux(V)", "otype")
 
   print(f"Querying SIMBAD hemisphere @ {observation}...")
   result = sim.query_region(center_icrs, radius = "15d")
@@ -29,7 +29,11 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
     print("No astronomical objects found. Check if it is night time in Bundoora or adjust filters.")
     return []
 
-  coords = SkyCoord(ra = result["RA"], dec = result["DEC"], unit = (u.hourangle, u.deg), frame = "icrs")
+  if "RA_d" in colnames and "DEC_d" in colnames:
+    coords = SkyCoord(ra = result ["RA_d"]*u.deg, dec = result["DEC_d"]*u.deg, frame = "icrs")
+  else:
+      coords = SkyCoord(ra = result["RA"], dec = result["DEC"], unit = (u.hourangle, u.deg), frame = "icrs")
+    
   aa = coords.transform_to(altaz)
   mag = result["FLUX_V"] if "FLUX_V" in result.colnames else np.array([np.nan]*len(result))
   otype = result["OTYPE"] if "OTYPE" in result.colnames else np.array(["?"]*len(result))
