@@ -1,5 +1,5 @@
 from astroquery.simbad import Simbad
-from astropy.coordinates import Skycoord, EarthLocation, AltAz
+from astropy.coordinates import SkyCoord, EarthLocation, AltAz
 from astropy.time import Time
 import astropy.units as u
 import numpy as np
@@ -11,9 +11,9 @@ row_limit = 10000
 current_time = True 
 
 def visible_objects_bundoora(min_alt_deg, magnitude):
-  observation = Time.now() if current_time
+  observation = Time.now() if current_time else Time("Error")
   location = EarthLocation(lat = lat*u.deg, lon = lon*u.deg)
-  altaz = AltAz(observation, location)
+  altaz = AltAz(obstime = observation, location = location)
 
 
   zenith = SkyCoord(alt = 90*u.deg, az = 0*u.deg, frame = altaz)
@@ -26,39 +26,43 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
   print(f"Querying SIMBAD hemisphere @ {observation} ...")
   result = sim.query_region(center_icrs, radius ="90d")
   if result is None or len(result) == 0:
-    print("No astronomical objects found. Check if it is night time in Bundoora.")
+    print("No astronomical objects found. Check if it is night time in Bundoora or adjust filters.")
     return []
 
-coords = SkyCoord(ra = result["RA"], dec = result["DEC"], unit = (u.hourangle, u.deg), frame = "icrs")
-aa = coords.transform_to(altaz)
-mag = result["FLUX_V"] if "FLUX_V" in result.colnames else np.array([np.nan]*len(result))
-otype = result["OTYPE"] if "OTYPE" in result.colnames else np.array(["?"]*len(result))
-names = result["MAIN_ID"]
+  coords = SkyCoord(ra = result["RA"], dec = result["DEC"], unit = (u.hourangle, u.deg), frame = "icrs")
+  aa = coords.transform_to(altaz)
+  mag = result["FLUX_V"] if "FLUX_V" in result.colnames else np.array([np.nan]*len(result))
+  otype = result["OTYPE"] if "OTYPE" in result.colnames else np.array(["?"]*len(result))
+  names = result["MAIN_ID"]
 
-alt_deg = aa.alt.deg
-mag_arr = np.array(mag, dtype = float)
-has_mag = np.isfinite(mag_arr)
-keep = (alt_deg >= min_alt_deg & (~has_mag)) | (mag_arr <= magnitude)
+  alt_deg = aa.alt.deg
+  mag_arr = np.array(mag, dtype = float)
+  has_mag = np.isfinite(mag_arr)
+  keep = (alt_deg >= min_alt_deg) & (~has_mag) | (mag_arr <= magnitude)
 
-visible = []
-for i in np.where(keep)[0]:
-  name = names[i].decode("utf-8") if hasattr(names[i], "decode") else str(names[i])
-  m = float (mag_arr[i]) if np.isfinite[mag_arr[i]) else None
-  visible.append({
-    "name": name,
-    "otype": str(otype[i]),
-    "ra": float(coords.rag.deg[i]),
-    "dec": float(alt_deg[i]),
-    "alt": float(alt_deg[i]),
-    "az": float(aa.az.deg[i]),
-  })
+  visible = []
+  for i in np.where(keep)[0]:
+    name = names[i].decode("utf-8") if hasattr(names[i], "decode") else str(names[i])
+    m = float (mag_arr[i]) if np.isfinite(mag_arr[i]) else None
+    visible.append({
+      "name": name,
+      "otype": str(otype[i]),
+      "ra": float(coords.ra.deg[i]),
+      "dec": float(coords.dec.deg[i]),
+      "alt": float(alt_deg[i]),
+      "az": float(aa.az.deg[i]),
+      "vmag": m
+    })
+return visible
+
 
 if __name__ == "__main__":
   objects = visible_objects_bundoora()
   if not objects:
     print("No objects found. Check if night time or adjust filters.")
   else: 
-    print(f"Visible objects (min_alt_deg, V <={magnitude}): {len(objs)}\n")
+    print(f"Visible objects (min_alt_deg, V <={magnitude}): {len(objects)}\n")
+    for obj in objects 
     
 
 
