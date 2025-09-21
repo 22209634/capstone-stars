@@ -7,7 +7,7 @@ import numpy as np
 lat, lon = -37.7, 145.05
 min_alt_deg = 30.0
 magnitude = 6.5
-row_limit = 300
+row_limit = 200
 current_time = True 
 
 def visible_objects_bundoora(min_alt_deg, magnitude):
@@ -24,7 +24,7 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
   sim.add_votable_fields("flux(V)", "otype")
 
   print(f"Querying SIMBAD hemisphere @ {observation} ...")
-  result = sim.query_region(center_icrs, radius ="90d")
+  result = sim.query_region(center_icrs, radius = "15d")
   if result is None or len(result) == 0:
     print("No astronomical objects found. Check if it is night time in Bundoora or adjust filters.")
     return []
