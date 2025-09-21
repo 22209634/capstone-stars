@@ -23,7 +23,7 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
   sim.row_limit = row_limit
   sim.add_votable_fields("flux(V)", "otype")
 
-  print(f"Querying SIMBAD hemisphere @ {observation} ...")
+  print(f"Querying SIMBAD hemisphere @ {observation}...")
   result = sim.query_region(center_icrs, radius = "15d")
   if result is None or len(result) == 0:
     print("No astronomical objects found. Check if it is night time in Bundoora or adjust filters.")
