@@ -11,7 +11,7 @@ row_limit = 10000
 current_time = True 
 
 def visible_objects_bundoora(min_alt_deg, magnitude):
-  observation = Time.now() if current_time else Time("Error")
+  observation = Time.now() if current_time else Time("2025-09-21T12:00:00")
   location = EarthLocation(lat = lat*u.deg, lon = lon*u.deg)
   altaz = AltAz(obstime = observation, location = location)
 
@@ -38,7 +38,7 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
   alt_deg = aa.alt.deg
   mag_arr = np.array(mag, dtype = float)
   has_mag = np.isfinite(mag_arr)
-  keep = (alt_deg >= min_alt_deg) & (~has_mag) | (mag_arr <= magnitude)
+  keep = (alt_deg >= min_alt_deg) & ((~has_mag) | (mag_arr <= magnitude))
 
   visible = []
   for i in np.where(keep)[0]:
@@ -53,7 +53,7 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
       "az": float(aa.az.deg[i]),
       "vmag": m
     })
-return visible
+    return visible
 
 
 if __name__ == "__main__":
@@ -61,6 +61,6 @@ if __name__ == "__main__":
   if not objects:
     print("No objects found. Check if night time or adjust filters.")
   else: 
-    print(f"Visible objects (min_alt_deg, V <={magnitude}): {len(objects)}\n")
+    print(f"Visible objects ({min_alt_deg}, V <={magnitude}): {len(objects)}\n")
 
 
