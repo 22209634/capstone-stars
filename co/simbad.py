@@ -29,6 +29,7 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
     print("No astronomical objects found. Check if it is night time in Bundoora or adjust filters.")
     return []
 
+  colnames = result.colnames
   if "RA_d" in colnames and "DEC_d" in colnames:
     coords = SkyCoord(ra = result ["RA_d"]*u.deg, dec = result["DEC_d"]*u.deg, frame = "icrs")
   else:
@@ -57,7 +58,7 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
       "az": float(aa.az.deg[i]),
       "vmag": m
     })
-    return visible
+  return visible
 
 
 if __name__ == "__main__":
