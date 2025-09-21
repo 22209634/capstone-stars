@@ -31,7 +31,7 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
 
   colnames = result.colnames
   if "RA_d" in colnames and "DEC_d" in colnames:
-    coords = SkyCoord(ra = result ["RA_d"]*u.deg, dec = result["DEC_d"]*u.deg, frame = "icrs")
+    coords = SkyCoord(ra = result ["ra_d"]*u.deg, dec = result["dec_d"]*u.deg, frame = "icrs")
   else:
     coords = SkyCoord(ra = result["RA"], dec = result["DEC"], unit = (u.hourangle, u.deg), frame = "icrs")
     
