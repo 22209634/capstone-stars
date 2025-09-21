@@ -57,7 +57,7 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
 
 
 if __name__ == "__main__":
-  objects = visible_objects_bundoora()
+  objects = visible_objects_bundoora(min_alt_deg, magnitude)
   if not objects:
     print("No objects found. Check if night time or adjust filters.")
   else: 
