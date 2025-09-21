@@ -21,7 +21,7 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
 
   sim = Simbad()
   sim.row_limit = row_limit
-  sim.add_votable_fields("ra", "dec", "flux(V)", "otype")
+  sim.add_votable_fields("ra", "dec", "flux(V)", "otype", "main_id")
 
   print(f"Querying SIMBAD hemisphere @ {observation}...")
   result = sim.query_region(center_icrs, radius = "8d")
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     print(f"Visible objects (minimum altitude = {min_alt_deg}°, magnitude <= {magnitude}): {len(objects)}\n")
     print("Preview")
     for obj in objects[:5]:
-      print(f" {obj['name']} | RA = {obj['ra']:.2f}° | Dec = {obj['dec']:.2f}° | alt = {obj['alt']:.1f}° | az = {obj['az']:.1f}° | magnitude = {obj['flux(V)']}")
+      print(f" {obj['name']} | RA = {obj['ra']:.2f}° | Dec = {obj['dec']:.2f}° | alt = {obj['alt']:.1f}° | az = {obj['az']:.1f}° | magnitude = {obj['magnitude']}")
 
 
 
