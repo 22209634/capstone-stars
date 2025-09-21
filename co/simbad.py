@@ -43,8 +43,6 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
   otype = result["OTYPE"] if "OTYPE" in result.colnames else np.array(["?"]*len(result))
   if "MAIN_ID" in result.colnames:
     names = result["MAIN_ID"]
-  elif "ID" in result.colnames:
-    names = result["ID"]
   else:
     names = np.array([f"Obj_{i+1}" for i in range(len(result))])
 
@@ -74,7 +72,7 @@ if __name__ == "__main__":
   if not objects:
     print("No objects found. Check if night time or adjust filters.")
   else: 
-    print(f"Visible objects (min_alt_deg = {min_alt_deg},, magnitude <= {magnitude}): {len(objects)}\n")
+    print(f"Visible objects (min_alt_deg = {min_alt_deg}, magnitude <= {magnitude}): {len(objects)}\n")
     print("Preview")
     for obj in objects[:5]:
       print(f" {obj['name']} | alt = {obj['alt']:.1f} | az = {obj['az']:.1f} | magnitude = {obj['magnitude']}")
