@@ -64,7 +64,7 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
       "dec": float(coords.dec.deg[i]),
       "alt": float(alt_deg[i]),
       "az": float(aa.az.deg[i]),
-      "vmag": m
+      "magnitude": m
     })
   return visible
 
