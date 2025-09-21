@@ -62,7 +62,5 @@ if __name__ == "__main__":
     print("No objects found. Check if night time or adjust filters.")
   else: 
     print(f"Visible objects (min_alt_deg, V <={magnitude}): {len(objects)}\n")
-    for obj in objects 
-    
 
 
