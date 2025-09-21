@@ -30,10 +30,13 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
     return []
 
   colnames = result.colnames
+  
+  ra_col = "ra" if "ra" in colnames else ("RA_d" if "RA_d" in colnames else "RA")
+  dec_col = "dec" if "dec" in colnames else ("DEC_d" if "DEC_d" in colnames else "DEC")
   if "RA_d" in colnames and "DEC_d" in colnames:
-    coords = SkyCoord(ra = result ["ra_d"]*u.deg, dec = result["dec_d"]*u.deg, frame = "icrs")
+    coords = SkyCoord(ra = result [ra_col]*u.deg, dec = result[dec_col]*u.deg, frame = "icrs")
   else:
-    coords = SkyCoord(ra = result["RA"], dec = result["DEC"], unit = (u.hourangle, u.deg), frame = "icrs")
+    coords = SkyCoord(ra = result[ra_col], dec = result[dec_col], unit = (u.hourangle, u.deg), frame = "icrs")
     
   aa = coords.transform_to(altaz)
   mag = result["FLUX_V"] if "FLUX_V" in result.colnames else np.array([np.nan]*len(result))
