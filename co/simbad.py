@@ -43,6 +43,8 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
   otype = result["OTYPE"] if "OTYPE" in result.colnames else np.array(["?"]*len(result))
   if "MAIN_ID" in result.colnames:
     names = result["MAIN_ID"]
+  elif "ID" in result.colnames:
+    names = result["ID"]
   else:
     names = np.array([f"Obj_{i+1}" for i in range(len(result))])
 
