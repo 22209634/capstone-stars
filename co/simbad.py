@@ -5,12 +5,60 @@ import astropy.units as u
 import numpy as np
 
 lat, lon = -37.7, 145.05
-location = EarthLocation(lat = lat*u.deg, lon = lon*u.deg)
-time = Time.now()
+min_alt_deg = 30.0
+magnitude = 6.5
+row_limit = 10000
+current_time = True 
 
-altaz_frame = Altaz(obstime = time, location = location)
-center = SkyCoord("
+def visible_objects_bundoora(min_alt_deg, magnitude):
+  observation = Time.now() if current_time
+  location = EarthLocation(lat = lat*u.deg, lon = lon*u.deg)
+  altaz = AltAz(observation, location)
 
 
-result = Simbad.query_object("M42")
-print(result)
+  zenith = SkyCoord(alt = 90*u.deg, az = 0*u.deg, frame = altaz)
+  center_icrs = zenith.icrs
+
+  sim = Simbad()
+  sim.row_limit = row_limit
+  sim.add_votable_fields("flux(V)", "otype")
+
+  print(f"Querying SIMBAD hemisphere @ {observation} ...")
+  result = sim.query_region(center_icrs, radius ="90d")
+  if result is None or len(result) == 0:
+    print("No astronomical objects found. Check if it is night time in Bundoora.")
+    return []
+
+coords = SkyCoord(ra = result["RA"], dec = result["DEC"], unit = (u.hourangle, u.deg), frame = "icrs")
+aa = coords.transform_to(altaz)
+mag = result["FLUX_V"] if "FLUX_V" in result.colnames else np.array([np.nan]*len(result))
+otype = result["OTYPE"] if "OTYPE" in result.colnames else np.array(["?"]*len(result))
+names = result["MAIN_ID"]
+
+alt_deg = aa.alt.deg
+mag_arr = np.array(mag, dtype = float)
+has_mag = np.isfinite(mag_arr)
+keep = (alt_deg >= min_alt_deg & (~has_mag)) | (mag_arr <= magnitude)
+
+visible = []
+for i in np.where(keep)[0]:
+  name = names[i].decode("utf-8") if hasattr(names[i], "decode") else str(names[i])
+  m = float (mag_arr[i]) if np.isfinite[mag_arr[i]) else None
+  visible.append({
+    "name": name,
+    "otype": str(otype[i]),
+    "ra": float(coords.rag.deg[i]),
+    "dec": float(alt_deg[i]),
+    "alt": float(alt_deg[i]),
+    "az": float(aa.az.deg[i]),
+  })
+
+if __name__ == "__main__":
+  objects = visible_objects_bundoora()
+  if not objects:
+    print("No objects found. Check if night time or adjust filters.")
+  else: 
+    print(f"Visible objects (min_alt_deg, V <={magnitude}): {len(objs)}\n")
+    
+
+
