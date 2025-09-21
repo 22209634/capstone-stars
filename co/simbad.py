@@ -77,7 +77,7 @@ if __name__ == "__main__":
     print(f"Visible objects (min_alt_deg = {min_alt_deg}, magnitude <= {magnitude}): {len(objects)}\n")
     print("Preview")
     for obj in objects[:5]:
-      print(f" {obj['name']} | alt = {obj['alt']:.1f} | az = {obj['az']:.1f} | magnitude = {obj['magnitude']}")
+      print(f" {obj['name']} | RA = {obj['ra']:.2f}° | Dec = {obj['dec']:.2f}° | alt = {obj['alt']:.1f}° | az = {obj['az']:.1f}° | magnitude = {obj['magnitude']}")
 
 
 
