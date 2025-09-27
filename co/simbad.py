@@ -44,7 +44,7 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
   if "MAIN_ID" in result.colnames:
     names = result["MAIN_ID"]
   elif "IDS" in result.colnames:
-    names = result["ID"]
+    names = result["IDS"]
   else:
     names = np.array([f"Obj_{i+1}" for i in range(len(result))])
 
