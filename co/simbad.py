@@ -41,9 +41,8 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
   aa = coords.transform_to(altaz)
   mag = result["V"] if "V" in result.colnames else np.array([np.nan]*len(result))
   otype = result["OTYPE"] if "OTYPE" in result.colnames else np.array(["?"]*len(result))
-  if "MAIN_ID" in result.colnames:
-    names = result["MAIN_ID"]
-  elif "IDS" in result.colnames:
+  names = result["MAIN_ID"]
+  if "IDS" in result.colnames:
     names = result["IDS"]
   else:
     names = np.array([f"Obj_{i+1}" for i in range(len(result))])
