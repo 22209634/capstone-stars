@@ -39,7 +39,7 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
     coords = SkyCoord(ra = result[ra_col], dec = result[dec_col], unit = (u.hourangle, u.deg), frame = "icrs")
     
   aa = coords.transform_to(altaz)
-  mag = result["flux(V)"] if "flux(V)" in result.colnames else np.array([np.nan]*len(result))
+  mag = result["FLUX(V)"] if "FLUX(V)" in result.colnames else np.array([np.nan]*len(result))
   otype = result["OTYPE"] if "OTYPE" in result.colnames else np.array(["?"]*len(result))
   if "MAIN_ID" in result.colnames:
     names = result["MAIN_ID"]
