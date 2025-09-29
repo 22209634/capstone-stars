@@ -50,7 +50,7 @@ def visible_objects_bundoora(min_alt_deg, magnitude):
   if name_col:
     names = np.array([str(x).strip() for x in result[name_col]])
   else:
-    names = np.array([f"Obj_{i+1}" for i in range(len(result))]
+    names = np.array([f"Obj_{i+1}" for i in range(len(result))])
 
   alt_deg = aa.alt.deg
   mag_arr = np.array(mag, dtype = float)
