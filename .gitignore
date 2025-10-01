@@ -22,6 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.claude/
 
 # Local environment variables
 .env.local
@@ -63,3 +64,9 @@ Thumbs.db
 
 # Test output
 test-results/
+
+# Pycache
+__pycache__/
+
+# Images
+captured_images/

@@ -1,0 +1,312 @@
+.camera-controls__panel {
+    background: #1a1a2e;
+    border: 1px solid #2a2a4a;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.camera-controls__wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.camera-controls__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #ffffff;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 8px;
+}
+
+/* Status Section */
+.camera-status {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.status-indicator {
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.status-indicator.connected {
+    color: #4ade80;
+}
+
+.status-indicator.disconnected {
+    color: #f87171;
+}
+
+.status-details {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: #a0a0b0;
+}
+
+/* Control Groups */
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid #2a2a4a;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.control-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    font-size: 14px;
+    color: #ffffff;
+}
+
+/* Exposure Controls */
+.exposure-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.exposure-slider {
+    flex: 1;
+    height: 6px;
+    background: #2a2a4a;
+    border-radius: 3px;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.exposure-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    background: #3b82f6;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.exposure-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: #3b82f6;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+.exposure-input {
+    width: 80px;
+    padding: 6px 8px;
+    border: 1px solid #2a2a4a;
+    border-radius: 4px;
+    background: #16213e;
+    color: #ffffff;
+    font-size: 14px;
+}
+
+.exposure-unit {
+    font-size: 12px;
+    color: #a0a0b0;
+    min-width: 50px;
+}
+
+.exposure-presets {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.preset-btn {
+    padding: 4px 8px;
+    font-size: 12px;
+    min-width: 40px;
+    background: #2a2a4a;
+    border: 1px solid #2a2a4a;
+}
+
+.preset-btn:hover {
+    background: #3a3a5a;
+}
+
+/* Temperature Controls */
+.temperature-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cooling-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cooling-toggle input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #3b82f6;
+}
+
+.cooling-toggle label {
+    font-size: 14px;
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.temperature-setting {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.temperature-slider {
+    flex: 1;
+    height: 6px;
+    background: #2a2a4a;
+    border-radius: 3px;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.temperature-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    background: #60a5fa;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.temperature-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: #60a5fa;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+.temperature-input {
+    width: 70px;
+    padding: 6px 8px;
+    border: 1px solid #2a2a4a;
+    border-radius: 4px;
+    background: #16213e;
+    color: #ffffff;
+    font-size: 14px;
+}
+
+.temperature-unit {
+    font-size: 12px;
+    color: #a0a0b0;
+    min-width: 25px;
+}
+
+.apply-temp-btn {
+    align-self: flex-start;
+    padding: 6px 12px;
+    font-size: 12px;
+    background: #60a5fa;
+    color: white;
+    border: none;
+}
+
+.apply-temp-btn:hover {
+    background: #3b82f6;
+}
+
+.temperature-presets {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+/* Capture Section */
+.capture-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-border);
+}
+
+.capture-main-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+}
+
+.capture-main-btn:hover:not(:disabled) {
+    background: #2563eb;
+}
+
+.capture-main-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.last-capture {
+    font-size: 12px;
+    color: #a0a0b0;
+    text-align: center;
+}
+
+/* Settings Summary */
+.settings-summary {
+    display: flex;
+    gap: 16px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    border: 1px solid #2a2a4a;
+}
+
+.summary-item {
+    font-size: 12px;
+    color: #a0a0b0;
+}
+
+.summary-item strong {
+    color: #ffffff;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .exposure-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .temperature-setting {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .exposure-presets,
+    .temperature-presets {
+        justify-content: center;
+    }
+
+    .settings-summary {
+        flex-direction: column;
+        gap: 4px;
+    }
+}
