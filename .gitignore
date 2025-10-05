@@ -63,3 +63,6 @@ Thumbs.db
 
 # Test output
 test-results/
+
+# Misc
+__pycache__
