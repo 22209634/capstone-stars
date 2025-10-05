@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Query
-from fastapi.middleware.cors import CORSMiddleware  # Add this import
+from fastapi.middleware.cors import CORSMiddleware 
 from typing import Optional, List
 from simbad import visible_objects_bundoora
 
@@ -10,10 +10,10 @@ app = FastAPI(title = "Telescope Simulator API",
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins (use specific URLs in production)
+    allow_origins=["*"],  # Allow all origins (for production/release: use specific URLs)
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
 )
 
 @app.get("/")
