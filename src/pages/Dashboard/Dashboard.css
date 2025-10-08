@@ -22,8 +22,6 @@
     display: flex;
     justify-content: space-between;
     padding: 1.2rem 0.6rem;
-    /* 100% - topbar height - padding */
-    height: calc(100% - 57px - 2.4rem)
 }
 
 .dashboard__menus__left {
@@ -38,6 +36,11 @@
     flex-direction: column;
     gap: 2.8rem;
     width: 25%;
+}
+
+.sky-object-list {
+    max-height: 30vh;
+    overflow-y: auto;
 }
 
 .telescope-status, .telescope-controls {
