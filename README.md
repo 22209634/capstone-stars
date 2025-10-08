@@ -14,4 +14,4 @@ To run the project in development mode:
 
 Current Progress of Front-end:
 
-https://github.com/user-attachments/assets/16257d3d-615e-4bea-b79e-8c942b7df4d7
+https://github.com/user-attachments/assets/0be40faf-f0af-4fa7-9cbd-0ac34874912c
