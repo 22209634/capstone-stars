@@ -12,19 +12,36 @@
     height: 4rem;
 }
 
+.telescope-controls__panel.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.telescope-controls__panel.parked {
+    background-color: #ef4444 !important;
+}
+
 .telescope-controls__up {
     grid-row-start: 1;
     grid-column-start: 2;
 }
 
+.telescope-controls__park {
+    grid-row-start: 1;
+    grid-column-start: 3;
+}
+
 .telescope-controls__right {
     grid-row-start: 2;
+    grid-column-start: 3;
 }
 
 .telescope-controls__down {
     grid-row-start: 2;
+    grid-column-start: 2;
 }
 
 .telescope-controls__left {
     grid-row-start: 2;
+    grid-column-start: 1;
 }

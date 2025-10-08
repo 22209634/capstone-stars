@@ -1,53 +1,63 @@
 import './TelescopeControls.css'
 import Button from '@/components/Button/Button.tsx'
 import { ArrowBigUp, ArrowBigDown, ArrowBigRight, ArrowBigLeft } from 'lucide-react'
-import { moveLeft, moveRight, moveUp, moveDown } from '@/services/controlsUtils'
-import { useStellarium } from '@/hooks/useStellarium'
+import { useTelescopeContext } from '@/contexts/TelescopeContext'
 
 export default function TelescopeControls() {
-    const stellarium = useStellarium();
+    const { startMoveUp, startMoveDown, startMoveLeft, startMoveRight, stopMove, togglePark, isParked } = useTelescopeContext();
 
-    console.log('TelescopeControls render - stellarium:', stellarium);
-
-    const handleMove = (moveFunction: (stel: any) => void) => {
-        console.log('handleMove called with stellarium:', stellarium);
-        if (stellarium) {
-            moveFunction(stellarium);
-            console.log('Moving telescope...');
-        } else {
-            console.log('Telescope not ready yet');
-        }
-    };
-    
     return (
         <div className="telescope-controls__wrapper">
             <Button
-                className="telescope-controls__panel telescope-controls__left"
+                className={`telescope-controls__panel telescope-controls__left ${isParked ? 'disabled' : ''}`}
                 borderRadius="3px"
-                onClick={() => handleMove(moveLeft)}
+                onMouseDown={startMoveLeft}
+                onMouseUp={stopMove}
+                onMouseLeave={stopMove}
+                onTouchStart={startMoveLeft}
+                onTouchEnd={stopMove}
             >
-                <ArrowBigLeft size={30} color="#ffffff" />
+                <ArrowBigLeft size={30} color={isParked ? "#888888" : "#ffffff"} />
             </Button>
             <Button
-                className="telescope-controls__panel telescope-controls__up"
+                className={`telescope-controls__panel telescope-controls__up ${isParked ? 'disabled' : ''}`}
                 borderRadius="3px"
-                onClick={() => handleMove(moveUp)}
+                onMouseDown={startMoveUp}
+                onMouseUp={stopMove}
+                onMouseLeave={stopMove}
+                onTouchStart={startMoveUp}
+                onTouchEnd={stopMove}
             >
-                <ArrowBigUp size={30} color="#ffffff" />
+                <ArrowBigUp size={30} color={isParked ? "#888888" : "#ffffff"} />
             </Button>
             <Button
-                className="telescope-controls__panel telescope-controls__down"
+                className={`telescope-controls__panel telescope-controls__park ${isParked ? 'parked' : ''}`}
                 borderRadius="3px"
-                onClick={() => handleMove(moveDown)}
+                onClick={togglePark}
             >
-                <ArrowBigDown size={30} color="#ffffff" />
+                <span style={{ color: '#ffffff', fontWeight: 'bold', fontSize: '16px' }}>PARK</span>
             </Button>
             <Button
-                className="telescope-controls__panel telescope-controls__right"
+                className={`telescope-controls__panel telescope-controls__down ${isParked ? 'disabled' : ''}`}
                 borderRadius="3px"
-                onClick={() => handleMove(moveRight)}
+                onMouseDown={startMoveDown}
+                onMouseUp={stopMove}
+                onMouseLeave={stopMove}
+                onTouchStart={startMoveDown}
+                onTouchEnd={stopMove}
             >
-                <ArrowBigRight size={30} color="#ffffff" />
+                <ArrowBigDown size={30} color={isParked ? "#888888" : "#ffffff"} />
+            </Button>
+            <Button
+                className={`telescope-controls__panel telescope-controls__right ${isParked ? 'disabled' : ''}`}
+                borderRadius="3px"
+                onMouseDown={startMoveRight}
+                onMouseUp={stopMove}
+                onMouseLeave={stopMove}
+                onTouchStart={startMoveRight}
+                onTouchEnd={stopMove}
+            >
+                <ArrowBigRight size={30} color={isParked ? "#888888" : "#ffffff"} />
             </Button>
         </div>
     )

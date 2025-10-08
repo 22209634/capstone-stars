@@ -1,12 +1,19 @@
 import './TelescopeView.css';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useTelescopeContext } from '@/contexts/TelescopeContext';
 
 export default function TelescopeView() {
-    const aladinDiv = useRef(null);
-    const aladinInstance = useRef(null);
+    const aladinDiv = useRef<HTMLDivElement>(null);
+    const aladinInstance = useRef<any>(null);
     const [isLoaded, setIsLoaded] = useState(false);
-    const rotationInterval = useRef(null); // Rotation
-    const [isParked, setIsParked] = useState(false);  // Telescope parking
+    const rotationInterval = useRef<any>(null); // Rotation
+    const coordinateUpdateInterval = useRef<any>(null); // Coordinate updates
+    const telescopeContext = useTelescopeContext();
+    const { setAladinInstance, setCoordinates } = telescopeContext;
+
+    // Store context in ref so interval can access latest values
+    const contextRef = useRef(telescopeContext);
+    contextRef.current = telescopeContext;
 
     useEffect(() => {
         // Load Aladin Lite library
@@ -26,7 +33,7 @@ export default function TelescopeView() {
                 // Wait for A.init to be ready
                 window.A.init.then(() => {
                     // Initialise Aladin
-                    aladinInstance.current = window.A.aladin(aladinDiv.current, {
+                    aladinInstance.current = (window as any).A.aladin(aladinDiv.current, {
                         survey: 'P/DSS2/color',
                         fov: 2,
                         target: '0 +0',
@@ -40,15 +47,19 @@ export default function TelescopeView() {
                         showFov: false, // Remove fov
                     });
 
+                    // Share Aladin instance with context
+                    setAladinInstance(aladinInstance.current);
+
                     // START Rotation code
 
                     // Remove location box
-                    const locationBox = aladinDiv.current.querySelector('.aladin-location');
+                    const locationBox = aladinDiv.current?.querySelector('.aladin-location');
                     if (locationBox) {
                         locationBox.remove();
                     }
 
                     startSkyRotation();
+                    startCoordinateUpdates();
 
                     // END Rotation
 
@@ -67,6 +78,10 @@ export default function TelescopeView() {
             if (rotationInterval.current) {
                 clearInterval(rotationInterval.current);
             }
+            // Stop coordinate updates
+            if (coordinateUpdateInterval.current) {
+                clearInterval(coordinateUpdateInterval.current);
+            }
         };
     }, []);
 
@@ -74,7 +89,10 @@ export default function TelescopeView() {
         // Earth rotates 360° in 24 hours = 15° per hour = 0.25° per minute
         // We'll simulate this with small increments
         rotationInterval.current = setInterval(() => {
-            if (aladinInstance.current && !isParked) {
+            // Access latest context values from ref
+            const { isParked: currentIsParked, status: currentStatus } = contextRef.current;
+
+            if (aladinInstance.current && !currentIsParked && currentStatus !== 'Slewing') {
                 const currentRaDec = aladinInstance.current.getRaDec();
 
                 // Move Right Ascension (RA) to simulate Earth's rotation
@@ -86,11 +104,17 @@ export default function TelescopeView() {
 
                 aladinInstance.current.gotoRaDec(newRa, currentRaDec[1]);
             }
-        }, 42);  // Update every 42/1000 seconds
+        }, 42) as any;  // Update every 42/1000 seconds
     };
 
-    const toggleParking = () => {
-        setIsParked(!isParked);
+    const startCoordinateUpdates = () => {
+        // Update context with current coordinates periodically
+        coordinateUpdateInterval.current = setInterval(() => {
+            if (aladinInstance.current) {
+                const currentRaDec = aladinInstance.current.getRaDec();
+                setCoordinates(currentRaDec[0], currentRaDec[1]);
+            }
+        }, 100) as any;  // Update every 100ms
     };
 
     return (
