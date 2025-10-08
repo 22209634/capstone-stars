@@ -38,11 +38,6 @@
     width: 25%;
 }
 
-.sky-object-list {
-    max-height: 30vh;
-    overflow-y: auto;
-}
-
 .telescope-status, .telescope-controls {
     width: 70%;
     margin-left: auto;

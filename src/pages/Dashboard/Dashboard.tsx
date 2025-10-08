@@ -6,6 +6,7 @@ import SkyObjectList from "@/components/SkyObjectList/SkyObjectList.tsx";
 import WeatherData from "@/components/WeatherData/WeatherData.tsx";
 import TelescopeStatus from "@/components/TelescopeStatus/TelescopeStatus.tsx";
 import TelescopeControls from "@/components/TelescopeControls/TelescopeControls.tsx";
+import CollapsiblePanel from "@/components/CollapsiblePanel/CollapsiblePanel.tsx";
 import { TelescopeProvider } from "@/contexts/TelescopeContext";
 
 export default function Dashboard() {
@@ -21,21 +22,31 @@ export default function Dashboard() {
                 <div className="dashboard__menus">
                     <div className="dashboard__menus__left">
                         <section className="sky-object-list">
-                            <SkyObjectList />
+                            <CollapsiblePanel side="left">
+                                <SkyObjectList />
+                            </CollapsiblePanel>
                         </section>
                         <section className="weather-data">
-                            <WeatherData />
+                            <CollapsiblePanel side="left">
+                                <WeatherData />
+                            </CollapsiblePanel>
                         </section>
                     </div>
                     <div className="dashboard__menus__right">
                         <section className="allsky-view">
-                            <AllSkyView />
+                            <CollapsiblePanel side="right">
+                                <AllSkyView />
+                            </CollapsiblePanel>
                         </section>
                         <section className="telescope-status">
-                            <TelescopeStatus />
+                            <CollapsiblePanel side="right">
+                                <TelescopeStatus />
+                            </CollapsiblePanel>
                         </section>
                         <section className="telescope-controls">
-                            <TelescopeControls />
+                            <CollapsiblePanel side="right">
+                                <TelescopeControls />
+                            </CollapsiblePanel>
                         </section>
                     </div>
                 </div>
