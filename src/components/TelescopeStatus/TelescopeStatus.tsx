@@ -1,36 +1,26 @@
 import './TelescopeStatus.css'
 import Panel from '@/components/Panel/Panel.tsx'
-import { useLiveTelescopeData } from '@/hooks/useLiveTelescopeData'
-
-
-
-const mockData = {
-    status: "Slewing",
-    rightAscension: 12.34,
-    declination: 56.78,
-    altitude: 123.45,
-    azimuth: 98.76
-}
+import { useTelescopeContext } from '@/contexts/TelescopeContext'
+import { degreesToHMS, degreesToDMS } from '@/utils/coordinateUtils'
 
 export default function TelescopeStatus() {
-    const liveData = useLiveTelescopeData();
+    const { ra, dec, status } = useTelescopeContext();
+
+    // Format RA and Dec to HMS/DMS format
+    const formattedRa = degreesToHMS(ra);
+    const formattedDec = degreesToDMS(dec);
+
     return (
         <div className="telescope-status__wrapper">
             <Panel className="telescope-status__panel" borderRadius="3px">
                 <div className="telescope-status__item">
-                    <p><span>Status</span> {mockData.status}</p>
+                    <p><span>Status</span> {status}</p>
                 </div>
             </Panel>
             <Panel className="telescope-status__panel" borderRadius="3px">
                 <div className="telescope-status__item">
-                    <p><span>RA</span> {mockData.rightAscension}</p>
-                    <p><span>Dec</span> {mockData.declination}</p>
-                </div>
-            </Panel>
-            <Panel className="telescope-status__panel" borderRadius="3px">
-                <div className="telescope-status__item">
-                    <p><span>Altitude</span> {liveData.altitude}</p>
-                    <p><span>Azimuth</span> {liveData.azimuth}</p>
+                    <p><span>RA</span> {formattedRa}</p>
+                    <p><span>Dec</span> {formattedDec}</p>
                 </div>
             </Panel>
         </div>

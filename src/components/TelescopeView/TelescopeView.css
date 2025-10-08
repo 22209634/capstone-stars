@@ -1,7 +1,21 @@
 .telescope-view__wrapper {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
 }
 
-.telescope-view__wrapper img {
+.aladin-div {
     width: 100%;
     height: 100%;
+}
+
+.loading-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #666;
+    font-size: 18px;
+    z-index: 10;
 }

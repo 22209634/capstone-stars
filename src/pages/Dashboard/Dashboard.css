@@ -22,8 +22,6 @@
     display: flex;
     justify-content: space-between;
     padding: 1.2rem 0.6rem;
-    /* 100% - topbar height - padding */
-    height: calc(100% - 57px - 2.4rem)
 }
 
 .dashboard__menus__left {
