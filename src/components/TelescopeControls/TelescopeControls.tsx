@@ -1,13 +1,37 @@
 import './TelescopeControls.css'
 import Button from '@/components/Button/Button.tsx'
+import Panel from '@/components/Panel/Panel.tsx'
 import { ArrowBigUp, ArrowBigDown, ArrowBigRight, ArrowBigLeft } from 'lucide-react'
 import { useTelescopeContext } from '@/contexts/TelescopeContext'
+import { useState } from 'react'
+import { hmsToDegrees, dmsToDegrees } from '@/utils/coordinateUtils'
 
 export default function TelescopeControls() {
-    const { startMoveUp, startMoveDown, startMoveLeft, startMoveRight, stopMove, togglePark, isParked } = useTelescopeContext();
+    const { startMoveUp, startMoveDown, startMoveLeft, startMoveRight, stopMove, togglePark, isParked, gotoCoordinates } = useTelescopeContext();
+    const [showGotoPanel, setShowGotoPanel] = useState(false);
+    const [raInput, setRaInput] = useState('');
+    const [decInput, setDecInput] = useState('');
+    const [error, setError] = useState('');
+
+    const handleGotoSubmit = () => {
+        try {
+            setError('');
+            // Convert HMS/DMS to decimal degrees
+            const raDegrees = hmsToDegrees(raInput);
+            const decDegrees = dmsToDegrees(decInput);
+
+            gotoCoordinates(raDegrees, decDegrees);
+            setShowGotoPanel(false);
+            setRaInput('');
+            setDecInput('');
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'Invalid coordinate format');
+        }
+    };
 
     return (
-        <div className="telescope-controls__wrapper">
+        <>
+            <div className="telescope-controls__wrapper">
             <Button
                 className={`telescope-controls__panel telescope-controls__left ${isParked ? 'disabled' : ''}`}
                 borderRadius="3px"
@@ -35,7 +59,7 @@ export default function TelescopeControls() {
                 borderRadius="3px"
                 onClick={togglePark}
             >
-                <span style={{ color: '#ffffff', fontWeight: 'bold', fontSize: '16px' }}>PARK</span>
+                <span className="telescope-controls__text">PARK</span>
             </Button>
             <Button
                 className={`telescope-controls__panel telescope-controls__down ${isParked ? 'disabled' : ''}`}
@@ -59,6 +83,55 @@ export default function TelescopeControls() {
             >
                 <ArrowBigRight size={30} color={isParked ? "#888888" : "#ffffff"} />
             </Button>
+            <Button
+                className="telescope-controls__panel telescope-controls__goto"
+                borderRadius="3px"
+                onClick={() => setShowGotoPanel(!showGotoPanel)}
+            >
+                <span className="telescope-controls__text telescope-controls__text--small">GOTO</span>
+            </Button>
         </div>
+
+        {showGotoPanel && (
+            <Panel className="goto-panel" borderRadius="3px">
+                <div className="goto-panel__content">
+                    <h3>Go To Coordinates</h3>
+                    <div className="goto-panel__inputs">
+                        <div className="goto-panel__input-group">
+                            <label>RA (HH:MM:SS)</label>
+                            <input
+                                type="text"
+                                value={raInput}
+                                onChange={(e) => setRaInput(e.target.value)}
+                                placeholder="12:34:56.7"
+                            />
+                        </div>
+                        <div className="goto-panel__input-group">
+                            <label>Dec (±DD:MM:SS)</label>
+                            <input
+                                type="text"
+                                value={decInput}
+                                onChange={(e) => setDecInput(e.target.value)}
+                                placeholder="+45:30:12.3"
+                            />
+                        </div>
+                    </div>
+                    {error && (
+                        <div className="goto-panel__error">
+                            {error}
+                        </div>
+                    )}
+                    <div className="goto-panel__buttons">
+                        <button onClick={handleGotoSubmit} className="goto-panel__button goto-panel__button--submit">
+                            Go
+                        </button>
+                        <button onClick={() => { setShowGotoPanel(false); setError(''); }} className="goto-panel__button goto-panel__button--cancel">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </Panel>
+        )}
+        </>
     )
 }

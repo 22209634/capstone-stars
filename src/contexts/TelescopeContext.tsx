@@ -24,6 +24,7 @@ interface TelescopeContextType {
     startMoveLeft: () => void;
     startMoveRight: () => void;
     togglePark: () => void;
+    gotoCoordinates: (ra: number, dec: number) => void;
 }
 
 const TelescopeContext = createContext<TelescopeContextType | undefined>(undefined);
@@ -156,6 +157,17 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
         }, 100);
     };
 
+    const gotoCoordinates = (targetRa: number, targetDec: number) => {
+        if (!aladinInstance || isParked) return;
+
+        // Clamp declination to valid range
+        const clampedDec = Math.max(-90, Math.min(90, targetDec));
+        // Normalize RA to 0-360
+        const normalizedRa = ((targetRa % 360) + 360) % 360;
+
+        slewTo(normalizedRa, clampedDec);
+    };
+
     const value: TelescopeContextType = {
         aladinInstance,
         setAladinInstance,
@@ -176,6 +188,7 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
         startMoveLeft,
         startMoveRight,
         togglePark,
+        gotoCoordinates,
     };
 
     return (
