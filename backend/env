@@ -1,0 +1,16 @@
+# Environment Configuration Example
+# Copy this file to .env and update with your values
+
+# Server Configuration
+HOST=0.0.0.0
+PORT=8000
+DEBUG=True
+
+# Observatory Location (Bundoora, Melbourne)
+LATITUDE=-37.7
+LONGITUDE=145.05
+
+# Default Query Parameters
+MIN_ALTITUDE_DEG=30.0
+MAX_MAGNITUDE=6.5
+ROW_LIMIT=100

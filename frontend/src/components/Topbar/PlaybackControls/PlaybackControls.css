@@ -1,0 +1,12 @@
+.playback-controls {
+    display: flex;
+    gap: 0.3rem;
+}
+
+.playback-controls__live {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    font-size: 0.9rem
+}

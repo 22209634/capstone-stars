@@ -1,0 +1,7 @@
+# Web framework
+fastapi==0.118.2
+uvicorn[standard]==0.37.0
+
+# Astronomy libraries
+astropy==7.1.0
+astroquery==0.4.11

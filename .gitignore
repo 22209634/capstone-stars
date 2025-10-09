@@ -7,11 +7,27 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-node_modules/
-dist
-dist-ssr
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
 *.local
+
+# Backend Python
+backend/__pycache__/
+backend/**/__pycache__/
+backend/.venv/
+backend/venv/
+backend/.env
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Dependencies
+node_modules/
+dist/
+dist-ssr/
 
 # Editor directories and files
 .vscode/*
@@ -23,7 +39,7 @@ dist-ssr
 *.sln
 *.sw?
 
-# Local environment variables
+# Environment variables
 .env.local
 .env
 
@@ -46,7 +62,7 @@ pids
 tmp/
 temp/
 
-#OS generated files
+# OS generated files
 .DS_Store
 .DS_Store?
 ._*
@@ -64,5 +80,9 @@ Thumbs.db
 # Test output
 test-results/
 
-# Misc
-__pycache__
+# Old structure (to be cleaned up)
+src/
+co/
+api.py
+simbad.py
+Telescope Movement/

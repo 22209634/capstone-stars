@@ -1,0 +1,44 @@
+.dashboard {
+    height: 100%;
+}
+
+.topbar {
+    position: sticky;
+    top: 0;
+    width: auto;
+}
+
+.telescope-view {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: -1;
+}
+
+.dashboard__menus {
+    display: flex;
+    justify-content: space-between;
+    padding: 1.2rem 0.6rem;
+}
+
+.dashboard__menus__left {
+    display: flex;
+    flex-direction: column;
+    gap: 2.8rem;
+    width: 17.5%;
+}
+
+.dashboard__menus__right {
+    display: flex;
+    flex-direction: column;
+    gap: 2.8rem;
+    width: 25%;
+}
+
+.telescope-status, .telescope-controls {
+    width: 70%;
+    margin-left: auto;
+}

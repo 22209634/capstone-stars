@@ -1,0 +1,63 @@
+.weather-data__wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.34rem;
+}
+
+/* Center Data in Panel */
+.weather-data__panel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.weather-data__item {
+    padding: 0.67rem 0.67rem;
+}
+
+/* Set data and labels positions */
+
+.weather-data__item {
+    display: flex;
+}
+
+.weather-data__panel:not(:first-child) .weather-data__item p:first-child {
+    border-right: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.weather-data__panel:not(:first-child) .weather-data__item p:last-child {;
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.weather-data__item p {
+    margin: 0;
+    display: flex;
+    text-align: center;
+}
+
+.weather-data__panel:first-child .weather-data__item p {
+    flex-direction: column;
+}
+
+.weather-data__panel:not(:first-child) .weather-data__item p {
+    flex-direction: column-reverse;
+}
+
+/* Centering Weather Data Separation Lines */
+.weather-data__panel:not(:first-child) .weather-data__item {
+    width: 100%;
+}
+
+.weather-data__panel:not(:first-child) .weather-data__item p {
+    width: 50%;
+}
+
+/* Fonts */
+
+.weather-data__item p {
+    font-size: 1.4rem;
+}
+
+.weather-data__item p span {
+    font-size: 0.9rem;
+}

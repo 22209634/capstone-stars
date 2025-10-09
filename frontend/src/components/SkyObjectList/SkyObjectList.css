@@ -1,0 +1,41 @@
+.sky-object-list__panel {
+    padding: 0.5rem 1rem 1rem;
+}
+
+.sky-object-list__panel:not(:last-child) {
+    margin-bottom: 1rem;
+}
+
+.sky-object-list__title {
+    margin: 0;
+    padding: 0.4rem 0.67rem;
+    text-align: center;
+}
+
+.sky-object-list__items-panel {
+    padding: 0.5rem 0.67rem;
+}
+
+.sky-object-list__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sky-object-list__item {
+    margin: 0;
+    padding: 0.34rem 0;
+}
+
+.sky-object-list__item:first-child {
+    padding-top: 0;
+}
+
+.sky-object-list__item:last-child {
+    padding-bottom: 0;
+}
+
+.sky-object-list__item:not(:last-child) {
+    --border: 1px solid rgba(255, 255, 255, 0.3);
+    border-bottom: var(--border);
+}
