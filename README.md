@@ -1,10 +1,7 @@
 # STARS Telescope Interface
 
-### [Deployed Version](https://22209634.github.io/capstone-stars/)
-### [Original Specs](./docs/Specs.pdf)
-
 ## About
-STARS is a web-based telescope control interface that enables remote operation of real telescopes. The application provides live camera feeds, automated photography, and celestial object tracking. When no telescope is connected, it operates in planetarium/simulation mode for planning and demonstration purposes.
+STARS is a web-based telescope control interface that enables remote operation of telescopes. The application provides live camera feeds, automated (Planned) photography, and celestial object tracking. When no telescope is connected, it operates in planetarium/simulation mode for planning and demonstration purposes.
 
 ## Demo
 
@@ -12,7 +9,7 @@ https://github.com/user-attachments/assets/0be40faf-f0af-4fa7-9cbd-0ac34874912c
 
 ## Project Structure
 
-This project follows a modern monorepo structure with separated frontend and backend:
+This project follows a monorepo structure with separated frontend and backend:
 
 ```
 capstone-stars/
@@ -39,24 +36,20 @@ capstone-stars/
 └── README.md         # This file
 ```
 
-## Tech Stack
-
-### Frontend
-- React 19 + TypeScript
-- Vite (build tool)
-- Lucide React (icons)
-
-### Backend
-- FastAPI (Python web framework)
-- Astropy (astronomical calculations)
-- Astroquery (SIMBAD database queries)
-- Uvicorn (ASGI server)
-
 ## Quick Start
 
 ### Prerequisites
 - Node.js 24 and npm
 - Python 3.13 and pip
+
+### First Steps
+
+Clone and cd into the repository
+
+```bash
+git clone https://github.com/22209634/capstone-stars
+cd capstone-stars
+```
 
 ### Frontend Setup
 
@@ -89,6 +82,19 @@ Backend API runs on `http://localhost:8000`
 ### API Documentation
 - Swagger UI: `http://localhost:8000/docs`
 - ReDoc: `http://localhost:8000/redoc`
+
+## Tech Stack
+
+### Frontend
+- React 19 + TypeScript
+- Vite (build tool)
+- Lucide React (icons)
+
+### Backend
+- FastAPI (Python web framework)
+- Astropy (astronomical calculations)
+- Astroquery (SIMBAD database queries)
+- Uvicorn (ASGI server)
 
 ## Development
 
