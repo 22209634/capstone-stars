@@ -80,9 +80,7 @@ Thumbs.db
 # Test output
 test-results/
 
-# Old structure (to be cleaned up)
-src/
-co/
-api.py
-simbad.py
-Telescope Movement/
+# Old structure (to be cleaned up after migration)
+# Note: These are only ignored at root level
+/co/
+/Telescope Movement/
