@@ -1,10 +1,10 @@
-# STARS Telescope Interface 2024
+# STARS Telescope Interface
 
 ### [Deployed Version](https://22209634.github.io/capstone-stars/)
 ### [Original Specs](./docs/Specs.pdf)
 
 ## About
-STARS (Stellar Tracking and Remote System) is a web-based telescope control interface that enables remote operation of real telescopes. The application provides live camera feeds, automated photography, and celestial object tracking. When no telescope is connected, it operates in planetarium/simulation mode for planning and demonstration purposes.
+STARS is a web-based telescope control interface that enables remote operation of real telescopes. The application provides live camera feeds, automated photography, and celestial object tracking. When no telescope is connected, it operates in planetarium/simulation mode for planning and demonstration purposes.
 
 ## Demo
 
@@ -55,9 +55,8 @@ capstone-stars/
 ## Quick Start
 
 ### Prerequisites
-- Node.js 18+ and npm
-- Python 3.9+
-- pip
+- Node.js 24 and npm
+- Python 3.13 and pip
 
 ### Frontend Setup
 
