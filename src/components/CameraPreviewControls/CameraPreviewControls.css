@@ -1,0 +1,143 @@
+.camera-preview-controls__panel {
+    background-color: #1a1a2e;
+    padding: 16px;
+}
+
+.camera-preview-controls__wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.camera-preview-controls__title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.camera-preview-controls__status {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #cccccc;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-dot.connected {
+    background-color: #4caf50;
+    box-shadow: 0 0 8px #4caf50;
+}
+
+.status-dot.disconnected {
+    background-color: #f44336;
+}
+
+.streaming-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background-color: rgba(255, 152, 0, 0.1);
+    border: 1px solid #ff9800;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #ff9800;
+    width: fit-content;
+}
+
+.streaming-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #ff9800;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.3;
+    }
+}
+
+.camera-preview-controls__buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.preview-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.start-preview-btn {
+    flex: 1;
+    background-color: #1e4620;
+    border-color: #4caf50;
+    color: #ffffff;
+}
+
+.start-preview-btn:hover:not(:disabled) {
+    background-color: #2d5016;
+    border-color: #66bb6a;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+}
+
+.stop-preview-btn {
+    flex: 1;
+    background-color: #5a1616;
+    border-color: #f44336;
+    color: #ffffff;
+}
+
+.stop-preview-btn:hover {
+    background-color: #6d1e1e;
+    border-color: #ff5252;
+}
+
+.refresh-preview-btn {
+    padding: 10px 12px;
+    background-color: #2a2a3e;
+    border-color: #4a90e2;
+}
+
+.refresh-preview-btn:hover:not(:disabled) {
+    background-color: #3a3a4e;
+    border-color: #66a3e2;
+}
+
+.camera-preview-controls__info {
+    padding: 8px 12px;
+    background-color: rgba(74, 144, 226, 0.1);
+    border-left: 3px solid #4a90e2;
+    border-radius: 4px;
+}
+
+.info-text {
+    margin: 0;
+    font-size: 13px;
+    color: #aaaaaa;
+    line-height: 1.4;
+}

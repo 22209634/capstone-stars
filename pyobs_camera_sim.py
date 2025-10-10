@@ -178,7 +178,7 @@ class PyObsCameraSimulator:
                 # Scale brightness by exposure time
                 brightness = min(255, int(brightness * math.sqrt(exposure_time)))
 
-                if brightness > 10:  # Only show visible stars
+                if brightness > 5:  # Only show visible stars (lowered threshold)
                     self._add_star_to_image(draw, x, y, brightness)
                     stars_in_field += 1
 

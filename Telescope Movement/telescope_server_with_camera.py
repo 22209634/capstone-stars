@@ -22,6 +22,57 @@ class ASCOMTelescope:
         self.telescope = None
         self.connected = False
 
+    @staticmethod
+    def get_available_telescopes():
+        """Get list of available ASCOM telescope drivers using Chooser"""
+        try:
+            pythoncom.CoInitialize()
+            chooser = win32com.client.Dispatch("ASCOM.Utilities.Chooser")
+            chooser.DeviceType = "Telescope"
+
+            # Get the list of available telescopes
+            telescopes = []
+            try:
+                # Access the registered drivers
+                profile = win32com.client.Dispatch("ASCOM.Utilities.Profile")
+                drivers = profile.RegisteredDevices("Telescope")
+
+                for driver_id in drivers:
+                    try:
+                        name = profile.GetValue(driver_id, "", "")
+                        telescopes.append({
+                            'id': driver_id,
+                            'name': name if name else driver_id
+                        })
+                    except:
+                        telescopes.append({
+                            'id': driver_id,
+                            'name': driver_id
+                        })
+            except Exception as e:
+                print(f"Error getting telescope list: {e}")
+
+            pythoncom.CoUninitialize()
+            return telescopes
+        except Exception as e:
+            print(f"Error initializing chooser: {e}")
+            return []
+
+    @staticmethod
+    def show_chooser():
+        """Show ASCOM Chooser dialog and return selected driver ID"""
+        try:
+            pythoncom.CoInitialize()
+            chooser = win32com.client.Dispatch("ASCOM.Utilities.Chooser")
+            chooser.DeviceType = "Telescope"
+            selected_driver = chooser.Choose("")
+            pythoncom.CoUninitialize()
+            return selected_driver
+        except Exception as e:
+            print(f"Chooser error: {e}")
+            pythoncom.CoUninitialize()
+            return None
+
     def connect(self):
         try:
             pythoncom.CoInitialize()
@@ -106,6 +157,137 @@ class ASCOMTelescope:
         except Exception as e:
             print(f"Abort error: {e}")
             return False
+
+class ASCOMCamera:
+    """ASCOM Camera wrapper for real camera control"""
+    def __init__(self, driver_id=None):
+        self.driver_id = driver_id
+        self.camera = None
+        self.connected = False
+
+    @staticmethod
+    def get_available_cameras():
+        """Get list of available ASCOM camera drivers"""
+        try:
+            pythoncom.CoInitialize()
+            profile = win32com.client.Dispatch("ASCOM.Utilities.Profile")
+            drivers = profile.RegisteredDevices("Camera")
+
+            cameras = []
+            for driver_id in drivers:
+                try:
+                    name = profile.GetValue(driver_id, "", "")
+                    cameras.append({
+                        'id': driver_id,
+                        'name': name if name else driver_id
+                    })
+                except:
+                    cameras.append({
+                        'id': driver_id,
+                        'name': driver_id
+                    })
+
+            pythoncom.CoUninitialize()
+            return cameras
+        except Exception as e:
+            print(f"Error getting camera list: {e}")
+            return []
+
+    @staticmethod
+    def show_chooser():
+        """Show ASCOM Chooser dialog for cameras"""
+        try:
+            pythoncom.CoInitialize()
+            chooser = win32com.client.Dispatch("ASCOM.Utilities.Chooser")
+            chooser.DeviceType = "Camera"
+            selected_driver = chooser.Choose("")
+            pythoncom.CoUninitialize()
+            return selected_driver
+        except Exception as e:
+            print(f"Camera chooser error: {e}")
+            pythoncom.CoUninitialize()
+            return None
+
+    def connect(self):
+        """Connect to ASCOM camera"""
+        try:
+            pythoncom.CoInitialize()
+            self.camera = win32com.client.Dispatch(self.driver_id)
+            self.camera.Connected = True
+            self.connected = True
+            print(f"Connected to ASCOM camera: {self.camera.Name}")
+            return True
+        except Exception as e:
+            print(f"Camera connection failed: {e}")
+            return False
+
+    def disconnect(self):
+        """Disconnect from ASCOM camera"""
+        if self.camera and self.connected:
+            try:
+                self.camera.Connected = False
+                self.connected = False
+                print("Disconnected from ASCOM camera")
+            except:
+                pass
+            finally:
+                pythoncom.CoUninitialize()
+
+    def get_status(self):
+        """Get camera status"""
+        if not self.connected:
+            return None
+        try:
+            pythoncom.CoInitialize()
+            status = {
+                'connected': self.camera.Connected,
+                'temperature': self.camera.CCDTemperature if hasattr(self.camera, 'CCDTemperature') else None,
+                'cooling': self.camera.CoolerOn if hasattr(self.camera, 'CoolerOn') else False,
+                'cameraState': str(self.camera.CameraState) if hasattr(self.camera, 'CameraState') else 'Unknown',
+                'width': self.camera.CameraXSize if hasattr(self.camera, 'CameraXSize') else 0,
+                'height': self.camera.CameraYSize if hasattr(self.camera, 'CameraYSize') else 0,
+            }
+            return status
+        except Exception as e:
+            print(f"Error getting camera status: {e}")
+            return None
+
+    def start_exposure(self, duration, light=True):
+        """Start an exposure"""
+        if not self.connected:
+            return False
+        try:
+            pythoncom.CoInitialize()
+            self.camera.StartExposure(duration, light)
+            print(f"Started {duration}s exposure")
+            return True
+        except Exception as e:
+            print(f"Error starting exposure: {e}")
+            return False
+
+    def image_ready(self):
+        """Check if image is ready"""
+        if not self.connected:
+            return False
+        try:
+            pythoncom.CoInitialize()
+            return hasattr(self.camera, 'ImageReady') and self.camera.ImageReady
+        except Exception as e:
+            print(f"Error checking image ready: {e}")
+            return False
+
+    def get_image_array(self):
+        """Get the image array from camera"""
+        if not self.connected:
+            return None
+        try:
+            pythoncom.CoInitialize()
+            if hasattr(self.camera, 'ImageArray'):
+                return self.camera.ImageArray
+            return None
+        except Exception as e:
+            print(f"Error getting image array: {e}")
+            return None
 
 # Create Flask app with CORS for React
 app = Flask(__name__)
@@ -213,22 +395,72 @@ def health_check():
         'camera_available': camera is not None
     })
 
-@app.route('/api/telescope/connect', methods=['POST'])
-def connect_telescope():
-    global telescope
-
+@app.route('/api/telescope/chooser/list', methods=['GET'])
+def list_telescopes():
+    """Get list of available ASCOM telescopes"""
     try:
-        telescope = ASCOMTelescope()
-        if telescope.connect():
+        telescopes = ASCOMTelescope.get_available_telescopes()
+        return jsonify({
+            'success': True,
+            'data': {
+                'telescopes': telescopes,
+                'count': len(telescopes)
+            }
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error listing telescopes: {str(e)}',
+            'data': {'telescopes': [], 'count': 0}
+        }), 500
+
+@app.route('/api/telescope/chooser', methods=['POST'])
+def show_telescope_chooser():
+    """Show ASCOM Chooser dialog and return selected telescope"""
+    try:
+        selected_driver = ASCOMTelescope.show_chooser()
+        if selected_driver:
             return jsonify({
                 'success': True,
-                'message': 'Connected to SimScope successfully',
-                'connected': True
+                'data': {
+                    'driverId': selected_driver
+                },
+                'message': f'Selected telescope: {selected_driver}'
             })
         else:
             return jsonify({
                 'success': False,
-                'message': 'Failed to connect to SimScope',
+                'message': 'No telescope selected',
+                'data': None
+            }), 400
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Chooser error: {str(e)}',
+            'data': None
+        }), 500
+
+@app.route('/api/telescope/connect', methods=['POST'])
+def connect_telescope():
+    """Connect to ASCOM telescope"""
+    global telescope
+
+    try:
+        data = request.get_json() or {}
+        driver_id = data.get('driverId', 'ASCOM.SimScope.Telescope')
+
+        telescope = ASCOMTelescope(driver_id=driver_id)
+        if telescope.connect():
+            return jsonify({
+                'success': True,
+                'message': f'Connected to {driver_id} successfully',
+                'connected': True,
+                'driverId': driver_id
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': f'Failed to connect to {driver_id}',
                 'connected': False
             }), 400
     except Exception as e:
@@ -318,6 +550,81 @@ def slew_telescope():
             'message': f'Slew error: {str(e)}'
         }), 500
 
+@app.route('/api/telescope/slew/altaz', methods=['POST'])
+def slew_telescope_altaz():
+    """Slew telescope using Alt/Az coordinates"""
+    if not telescope or not telescope.connected:
+        return jsonify({
+            'success': False,
+            'message': 'Telescope not connected'
+        }), 400
+
+    try:
+        data = request.get_json()
+        altitude = float(data.get('altitude', 0))
+        azimuth = float(data.get('azimuth', 0))
+
+        # Validate coordinates
+        if not (0 <= altitude <= 90):
+            return jsonify({
+                'success': False,
+                'message': 'Altitude must be between 0 and 90 degrees'
+            }), 400
+
+        if not (0 <= azimuth < 360):
+            return jsonify({
+                'success': False,
+                'message': 'Azimuth must be between 0 and 360 degrees'
+            }), 400
+
+        # Try to slew using SlewToAltAz if available
+        pythoncom.CoInitialize()
+        try:
+            if hasattr(telescope.telescope, 'SlewToAltAz'):
+                telescope.telescope.SlewToAltAz(azimuth, altitude)
+                success = True
+            else:
+                # Fallback: Convert Alt/Az to RA/Dec
+                # Most ASCOM telescopes support coordinate conversion
+                if hasattr(telescope.telescope, 'AltitudeToRA'):
+                    ra = telescope.telescope.AltitudeToRA(altitude, azimuth)
+                    dec = telescope.telescope.AltitudeToDec(altitude, azimuth)
+                    success = telescope.slew_to_coordinates(ra, dec)
+                else:
+                    # Last resort: Just slew to Alt/Az using SlewToCoordinatesAsync if supported
+                    return jsonify({
+                        'success': False,
+                        'message': 'Telescope does not support Alt/Az slewing or conversion'
+                    }), 400
+
+            if success:
+                return jsonify({
+                    'success': True,
+                    'message': f'Slewing to Alt: {altitude}°, Az: {azimuth}°',
+                    'targetCoordinates': {
+                        'altitude': altitude,
+                        'azimuth': azimuth
+                    }
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': 'Slew command failed'
+                }), 500
+
+        except Exception as e:
+            print(f"Alt/Az slew error: {e}")
+            return jsonify({
+                'success': False,
+                'message': f'Alt/Az slew error: {str(e)}'
+            }), 500
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Slew error: {str(e)}'
+        }), 500
+
 @app.route('/api/telescope/abort', methods=['POST'])
 def abort_slew():
     if telescope and telescope.connected:
@@ -399,6 +706,108 @@ def slew_to_object(object_id):
         }), 500
 
 # Camera API Routes
+@app.route('/api/camera/chooser/list', methods=['GET'])
+def list_cameras():
+    """Get list of available ASCOM cameras"""
+    try:
+        cameras = ASCOMCamera.get_available_cameras()
+        return jsonify({
+            'success': True,
+            'data': {
+                'cameras': cameras,
+                'count': len(cameras)
+            }
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error listing cameras: {str(e)}',
+            'data': {'cameras': [], 'count': 0}
+        }), 500
+
+@app.route('/api/camera/chooser', methods=['POST'])
+def show_camera_chooser():
+    """Show ASCOM Chooser dialog and return selected camera"""
+    try:
+        selected_driver = ASCOMCamera.show_chooser()
+        if selected_driver:
+            return jsonify({
+                'success': True,
+                'data': {
+                    'driverId': selected_driver
+                },
+                'message': f'Selected camera: {selected_driver}'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'No camera selected',
+                'data': None
+            }), 400
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Chooser error: {str(e)}',
+            'data': None
+        }), 500
+
+@app.route('/api/camera/connect', methods=['POST'])
+def connect_camera():
+    """Connect to ASCOM camera"""
+    global camera
+
+    try:
+        data = request.get_json() or {}
+        driver_id = data.get('driverId')
+
+        if not driver_id:
+            return jsonify({
+                'success': False,
+                'message': 'No camera driver ID provided'
+            }), 400
+
+        # Disconnect existing camera if any
+        if camera and isinstance(camera, ASCOMCamera):
+            camera.disconnect()
+
+        camera = ASCOMCamera(driver_id=driver_id)
+        if camera.connect():
+            return jsonify({
+                'success': True,
+                'message': f'Connected to {driver_id} successfully',
+                'connected': True,
+                'driverId': driver_id
+            })
+        else:
+            camera = None
+            return jsonify({
+                'success': False,
+                'message': f'Failed to connect to {driver_id}',
+                'connected': False
+            }), 400
+    except Exception as e:
+        camera = None
+        return jsonify({
+            'success': False,
+            'message': f'Connection error: {str(e)}',
+            'connected': False
+        }), 500
+
+@app.route('/api/camera/disconnect', methods=['POST'])
+def disconnect_camera():
+    """Disconnect from ASCOM camera"""
+    global camera
+
+    if camera and isinstance(camera, ASCOMCamera):
+        camera.disconnect()
+        camera = None
+
+    return jsonify({
+        'success': True,
+        'message': 'Disconnected from camera',
+        'connected': False
+    })
+
 @app.route('/api/camera/status', methods=['GET'])
 def get_camera_status():
     if not camera:
@@ -407,6 +816,21 @@ def get_camera_status():
             'message': 'Camera not available'
         }), 400
 
+    # Check if it's ASCOM camera
+    if isinstance(camera, ASCOMCamera):
+        status = camera.get_status()
+        if status:
+            return jsonify({
+                'success': True,
+                'data': status
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Failed to get camera status'
+            }), 400
+
+    # PyObs simulator camera
     return jsonify({
         'success': True,
         'data': {
@@ -427,6 +851,121 @@ def get_camera_status():
         }
     })
 
+@app.route('/api/camera/preview', methods=['POST'])
+def preview_camera():
+    """Quick preview capture for live view"""
+    if not camera:
+        return jsonify({
+            'success': False,
+            'message': 'Camera not available'
+        }), 400
+
+    try:
+        # Get capture parameters
+        data = request.get_json() or {}
+        exposure_time = float(data.get('exposureTime', 0.5))  # Default 0.5s for preview
+
+        # Validate exposure time
+        if not (0.01 <= exposure_time <= 10):
+            return jsonify({
+                'success': False,
+                'message': 'Preview exposure time must be between 0.01 and 10 seconds'
+            }), 400
+
+        # Check if ASCOM camera
+        if isinstance(camera, ASCOMCamera):
+            import time
+            import numpy as np
+            from PIL import Image
+            import base64
+            from io import BytesIO
+
+            # Start exposure
+            if not camera.start_exposure(exposure_time):
+                return jsonify({
+                    'success': False,
+                    'message': 'Failed to start exposure'
+                }), 500
+
+            # Wait for exposure to complete
+            time.sleep(exposure_time + 0.2)  # Minimal buffer for preview
+
+            # Wait for image to be ready (shorter timeout for preview)
+            max_wait = 5
+            wait_time = 0
+            while not camera.image_ready() and wait_time < max_wait:
+                time.sleep(0.1)
+                wait_time += 0.1
+
+            if not camera.image_ready():
+                return jsonify({
+                    'success': False,
+                    'message': 'Preview timeout'
+                }), 500
+
+            # Get image array
+            image_array = camera.get_image_array()
+            if image_array is None:
+                return jsonify({
+                    'success': False,
+                    'message': 'Failed to retrieve preview'
+                }), 500
+
+            # Convert to numpy array and normalize
+            try:
+                img_array = np.array(image_array, dtype=np.float32)
+
+                # Normalize to 0-255 range
+                img_min = img_array.min()
+                img_max = img_array.max()
+                if img_max > img_min:
+                    img_normalized = ((img_array - img_min) / (img_max - img_min) * 255).astype(np.uint8)
+                else:
+                    img_normalized = np.zeros_like(img_array, dtype=np.uint8)
+
+                # Create PIL image
+                pil_image = Image.fromarray(img_normalized, mode='L')
+
+                # Resize for web display (optional, for performance)
+                max_size = (1280, 720)
+                pil_image.thumbnail(max_size, Image.Resampling.LANCZOS)
+
+                # Convert to base64 for preview
+                buffered = BytesIO()
+                pil_image.save(buffered, format="PNG", optimize=True)
+                img_base64 = base64.b64encode(buffered.getvalue()).decode()
+
+                return jsonify({
+                    'success': True,
+                    'message': 'Preview captured',
+                    'data': {
+                        'image_base64': img_base64,
+                        'image_size': list(pil_image.size),
+                        'exposure_time': exposure_time
+                    }
+                })
+
+            except Exception as e:
+                return jsonify({
+                    'success': False,
+                    'message': f'Error processing preview: {str(e)}'
+                }), 500
+
+        else:
+            # PyObs simulator - not supported for preview without telescope
+            return jsonify({
+                'success': False,
+                'message': 'Preview only supported for ASCOM cameras'
+            }), 400
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'message': f'Preview error: {str(e)}'
+        }), 500
+
 @app.route('/api/camera/capture', methods=['POST'])
 def capture_image():
     if not camera:
@@ -435,21 +974,7 @@ def capture_image():
             'message': 'Camera not available'
         }), 400
 
-    if not telescope or not telescope.connected:
-        return jsonify({
-            'success': False,
-            'message': 'Telescope not connected - need coordinates for capture'
-        }), 400
-
     try:
-        # Get current telescope position
-        status = telescope.get_status()
-        if not status:
-            return jsonify({
-                'success': False,
-                'message': 'Cannot get telescope position'
-            }), 400
-
         # Get capture parameters
         data = request.get_json() or {}
         exposure_time = float(data.get('exposureTime', 1.0))
@@ -462,40 +987,150 @@ def capture_image():
                 'message': 'Exposure time must be between 0.1 and 300 seconds'
             }), 400
 
-        # Capture image asynchronously
-        def capture_async():
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            return loop.run_until_complete(
-                camera.capture_and_save(
-                    status['rightAscension'],
-                    status['declination'],
-                    exposure_time,
-                    target_name
-                )
-            )
+        # Check if ASCOM camera
+        if isinstance(camera, ASCOMCamera):
+            # ASCOM camera capture
+            import time
+            import numpy as np
+            from PIL import Image
+            import base64
+            from io import BytesIO
 
-        # Run in thread to avoid blocking
-        result = capture_async()
+            # Start exposure
+            if not camera.start_exposure(exposure_time):
+                return jsonify({
+                    'success': False,
+                    'message': 'Failed to start exposure'
+                }), 500
 
-        if result['success']:
-            return jsonify({
-                'success': True,
-                'message': 'Image captured successfully',
-                'data': {
-                    'filename': result['filename'],
-                    'metadata': result['metadata'],
-                    'image_base64': result['image_base64'],
-                    'image_size': result['image_size']
-                }
-            })
+            # Wait for exposure to complete
+            print(f"Waiting for {exposure_time}s exposure...")
+            time.sleep(exposure_time + 0.5)  # Add buffer time
+
+            # Wait for image to be ready
+            max_wait = 30  # Maximum wait time in seconds
+            wait_time = 0
+            while not camera.image_ready() and wait_time < max_wait:
+                time.sleep(0.5)
+                wait_time += 0.5
+
+            if not camera.image_ready():
+                return jsonify({
+                    'success': False,
+                    'message': 'Timeout waiting for image'
+                }), 500
+
+            # Get image array
+            image_array = camera.get_image_array()
+            if image_array is None:
+                return jsonify({
+                    'success': False,
+                    'message': 'Failed to retrieve image data'
+                }), 500
+
+            # Convert to numpy array and normalize
+            try:
+                # ASCOM images are typically 2D arrays
+                img_array = np.array(image_array, dtype=np.float32)
+
+                # Normalize to 0-255 range
+                img_min = img_array.min()
+                img_max = img_array.max()
+                if img_max > img_min:
+                    img_normalized = ((img_array - img_min) / (img_max - img_min) * 255).astype(np.uint8)
+                else:
+                    img_normalized = np.zeros_like(img_array, dtype=np.uint8)
+
+                # Create PIL image
+                pil_image = Image.fromarray(img_normalized, mode='L')
+
+                # Save to file
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                filename = f"ascom_capture_{timestamp}.png"
+
+                # Ensure images directory exists
+                images_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'captured_images')
+                os.makedirs(images_dir, exist_ok=True)
+                filepath = os.path.join(images_dir, filename)
+                pil_image.save(filepath)
+
+                # Convert to base64 for preview
+                buffered = BytesIO()
+                pil_image.save(buffered, format="PNG")
+                img_base64 = base64.b64encode(buffered.getvalue()).decode()
+
+                return jsonify({
+                    'success': True,
+                    'message': 'Image captured successfully',
+                    'data': {
+                        'filename': filename,
+                        'image_base64': img_base64,
+                        'image_size': list(pil_image.size),
+                        'metadata': {
+                            'exposure_time': exposure_time,
+                            'timestamp': timestamp
+                        }
+                    }
+                })
+
+            except Exception as e:
+                return jsonify({
+                    'success': False,
+                    'message': f'Error processing image: {str(e)}'
+                }), 500
+
         else:
-            return jsonify({
-                'success': False,
-                'message': 'Image capture failed'
-            }), 500
+            # PyObs simulator camera
+            if not telescope or not telescope.connected:
+                return jsonify({
+                    'success': False,
+                    'message': 'Telescope not connected - need coordinates for capture'
+                }), 400
+
+            # Get current telescope position
+            status = telescope.get_status()
+            if not status:
+                return jsonify({
+                    'success': False,
+                    'message': 'Cannot get telescope position'
+                }), 400
+
+            # Capture image asynchronously
+            def capture_async():
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                return loop.run_until_complete(
+                    camera.capture_and_save(
+                        status['rightAscension'],
+                        status['declination'],
+                        exposure_time,
+                        target_name
+                    )
+                )
+
+            # Run in thread to avoid blocking
+            result = capture_async()
+
+            if result['success']:
+                return jsonify({
+                    'success': True,
+                    'message': 'Image captured successfully',
+                    'data': {
+                        'filename': result['filename'],
+                        'metadata': result['metadata'],
+                        'image_base64': result['image_base64'],
+                        'image_size': result['image_size']
+                    }
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': 'Image capture failed'
+                }), 500
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'message': f'Capture error: {str(e)}'
@@ -660,24 +1295,33 @@ if __name__ == '__main__':
     print("=" * 50)
     print("API URL: http://localhost:8000")
     print("React Dev Server: http://localhost:3000")
-    print("Make sure SimScope is running!")
+    print("Make sure ASCOM Platform is installed!")
     print("")
     print("Initializing camera simulator...")
     init_camera()
     print("")
     print("API Endpoints:")
     print("Telescope:")
+    print("  GET  /api/telescope/chooser/list")
+    print("  POST /api/telescope/chooser")
     print("  POST /api/telescope/connect")
     print("  POST /api/telescope/disconnect")
     print("  GET  /api/telescope/status")
     print("  POST /api/telescope/slew")
+    print("  POST /api/telescope/slew/altaz")
     print("  POST /api/telescope/abort")
     print("  POST /api/telescope/tracking")
     print("  POST /api/telescope/slew/object/<id>")
     print("")
     print("Camera:")
+    print("  GET  /api/camera/chooser/list")
+    print("  POST /api/camera/chooser")
+    print("  POST /api/camera/connect")
+    print("  POST /api/camera/disconnect")
     print("  GET  /api/camera/status")
+    print("  POST /api/camera/preview")
     print("  POST /api/camera/capture")
+    print("  POST /api/camera/cooling")
     print("  GET  /api/camera/images")
     print("  GET  /api/camera/images/<filename>")
     print("")

@@ -50,8 +50,19 @@ class TelescopeAPI {
     }
   }
 
-  async connectTelescope(): Promise<APIResponse> {
-    return this.makeRequest('/telescope/connect', { method: 'POST' });
+  async connectTelescope(driverId?: string): Promise<APIResponse> {
+    return this.makeRequest('/telescope/connect', {
+      method: 'POST',
+      body: driverId ? JSON.stringify({ driverId }) : undefined,
+    });
+  }
+
+  async getAvailableTelescopes(): Promise<APIResponse> {
+    return this.makeRequest('/telescope/chooser/list');
+  }
+
+  async showChooser(): Promise<APIResponse> {
+    return this.makeRequest('/telescope/chooser', { method: 'POST' });
   }
 
   async disconnectTelescope(): Promise<APIResponse> {
@@ -82,6 +93,25 @@ class TelescopeAPI {
 
   async slewToObject(objectId: string): Promise<APIResponse> {
     return this.makeRequest(`/telescope/slew/object/${objectId}`, { method: 'POST' });
+  }
+
+  async getAvailableCameras(): Promise<APIResponse> {
+    return this.makeRequest('/camera/chooser/list');
+  }
+
+  async showCameraChooser(): Promise<APIResponse> {
+    return this.makeRequest('/camera/chooser', { method: 'POST' });
+  }
+
+  async connectCamera(driverId: string): Promise<APIResponse> {
+    return this.makeRequest('/camera/connect', {
+      method: 'POST',
+      body: JSON.stringify({ driverId }),
+    });
+  }
+
+  async disconnectCamera(): Promise<APIResponse> {
+    return this.makeRequest('/camera/disconnect', { method: 'POST' });
   }
 }
 

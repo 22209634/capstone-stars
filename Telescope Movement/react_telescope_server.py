@@ -13,7 +13,58 @@ class ASCOMTelescope:
         self.driver_id = driver_id
         self.telescope = None
         self.connected = False
-    
+
+    @staticmethod
+    def get_available_telescopes():
+        """Get list of available ASCOM telescope drivers using Chooser"""
+        try:
+            pythoncom.CoInitialize()
+            chooser = win32com.client.Dispatch("ASCOM.Utilities.Chooser")
+            chooser.DeviceType = "Telescope"
+
+            # Get the list of available telescopes
+            telescopes = []
+            try:
+                # Access the registered drivers
+                profile = win32com.client.Dispatch("ASCOM.Utilities.Profile")
+                drivers = profile.RegisteredDevices("Telescope")
+
+                for driver_id in drivers:
+                    try:
+                        name = profile.GetValue(driver_id, "", "")
+                        telescopes.append({
+                            'id': driver_id,
+                            'name': name if name else driver_id
+                        })
+                    except:
+                        telescopes.append({
+                            'id': driver_id,
+                            'name': driver_id
+                        })
+            except Exception as e:
+                print(f"Error getting telescope list: {e}")
+
+            pythoncom.CoUninitialize()
+            return telescopes
+        except Exception as e:
+            print(f"Error initializing chooser: {e}")
+            return []
+
+    @staticmethod
+    def show_chooser():
+        """Show ASCOM Chooser dialog and return selected driver ID"""
+        try:
+            pythoncom.CoInitialize()
+            chooser = win32com.client.Dispatch("ASCOM.Utilities.Chooser")
+            chooser.DeviceType = "Telescope"
+            selected_driver = chooser.Choose("")
+            pythoncom.CoUninitialize()
+            return selected_driver
+        except Exception as e:
+            print(f"Chooser error: {e}")
+            pythoncom.CoUninitialize()
+            return None
+
     def connect(self):
         try:
             pythoncom.CoInitialize()
@@ -210,23 +261,72 @@ def health_check():
         'timestamp': datetime.now().isoformat()
     })
 
-@app.route('/api/telescope/connect', methods=['POST'])
-def connect_telescope():
-    """Connect to SimScope telescope"""
-    global telescope
-    
+@app.route('/api/telescope/chooser/list', methods=['GET'])
+def list_telescopes():
+    """Get list of available ASCOM telescopes"""
     try:
-        telescope = ASCOMTelescope()
-        if telescope.connect():
+        telescopes = ASCOMTelescope.get_available_telescopes()
+        return jsonify({
+            'success': True,
+            'data': {
+                'telescopes': telescopes,
+                'count': len(telescopes)
+            }
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error listing telescopes: {str(e)}',
+            'data': {'telescopes': [], 'count': 0}
+        }), 500
+
+@app.route('/api/telescope/chooser', methods=['POST'])
+def show_telescope_chooser():
+    """Show ASCOM Chooser dialog and return selected telescope"""
+    try:
+        selected_driver = ASCOMTelescope.show_chooser()
+        if selected_driver:
             return jsonify({
                 'success': True,
-                'message': 'Connected to SimScope successfully',
-                'connected': True
+                'data': {
+                    'driverId': selected_driver
+                },
+                'message': f'Selected telescope: {selected_driver}'
             })
         else:
             return jsonify({
                 'success': False,
-                'message': 'Failed to connect to SimScope',
+                'message': 'No telescope selected',
+                'data': None
+            }), 400
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Chooser error: {str(e)}',
+            'data': None
+        }), 500
+
+@app.route('/api/telescope/connect', methods=['POST'])
+def connect_telescope():
+    """Connect to ASCOM telescope"""
+    global telescope
+
+    try:
+        data = request.get_json() or {}
+        driver_id = data.get('driverId', 'ASCOM.SimScope.Telescope')
+
+        telescope = ASCOMTelescope(driver_id=driver_id)
+        if telescope.connect():
+            return jsonify({
+                'success': True,
+                'message': f'Connected to {driver_id} successfully',
+                'connected': True,
+                'driverId': driver_id
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': f'Failed to connect to {driver_id}',
                 'connected': False
             }), 400
     except Exception as e:
@@ -448,12 +548,14 @@ if __name__ == '__main__':
     print("=" * 50)
     print("API URL: http://localhost:8000")
     print("React Dev Server: http://localhost:3000")
-    print("Make sure SimScope is running!")
+    print("Make sure ASCOM Platform is installed!")
     print("")
     print("API Endpoints:")
     print("  GET  /api/health")
+    print("  GET  /api/telescope/chooser/list")
+    print("  POST /api/telescope/chooser")
     print("  POST /api/telescope/connect")
-    print("  POST /api/telescope/disconnect") 
+    print("  POST /api/telescope/disconnect")
     print("  GET  /api/telescope/status")
     print("  POST /api/telescope/slew")
     print("  POST /api/telescope/abort")
@@ -463,6 +565,6 @@ if __name__ == '__main__':
     print("  POST /api/telescope/slew/object/<id>")
     print("")
     print("Server starting...")
-    
+
     # Use port 8000 to avoid conflicts with React (usually port 3000)
     app.run(host='0.0.0.0', port=8000, debug=True)

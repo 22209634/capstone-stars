@@ -1,8 +1,10 @@
 import './CameraControls.css'
 import Panel from '@/components/Panel/Panel.tsx'
 import Button from '@/components/Button/Button.tsx'
-import { Camera, Thermometer, Clock } from 'lucide-react'
+import { Camera, Thermometer, Clock, ListTree } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import CameraChooser from '@/components/CameraChooser/CameraChooser'
+import telescopeAPI from '@/services/telescopeAPI'
 
 interface CameraStatus {
     available: boolean
@@ -22,6 +24,48 @@ export default function CameraControls() {
     const [capturing, setCapturing] = useState(false)
     const [cameraStatus, setCameraStatus] = useState<CameraStatus | null>(null)
     const [lastImage, setLastImage] = useState<string | null>(null)
+    const [showChooser, setShowChooser] = useState(false)
+    const [cameraConnected, setCameraConnected] = useState(false)
+    const [isConnecting, setIsConnecting] = useState(false)
+
+    const handleCameraSelect = async (driverId: string) => {
+        setIsConnecting(true)
+        console.log(`Connecting to camera: ${driverId}`)
+
+        try {
+            const response = await telescopeAPI.connectCamera(driverId)
+            console.log('Connect response:', response)
+
+            setCameraConnected(response.success)
+            if (response.success) {
+                console.log('✅ Connected to camera:', response.message)
+                fetchCameraStatus()
+            } else {
+                console.error('❌ Connection failed:', response.message)
+            }
+        } catch (error) {
+            console.error('❌ Error connecting to camera:', error)
+            setCameraConnected(false)
+        } finally {
+            setIsConnecting(false)
+        }
+    }
+
+    const handleCameraConnection = () => {
+        if (cameraConnected) {
+            // Disconnect
+            telescopeAPI.disconnectCamera()
+                .then(() => {
+                    setCameraConnected(false)
+                    setCameraStatus(null)
+                    console.log('Disconnected from camera')
+                })
+                .catch(error => console.error('Error disconnecting:', error))
+        } else {
+            // Show chooser
+            setShowChooser(true)
+        }
+    }
 
     // Fetch camera status
     const fetchCameraStatus = async () => {
@@ -31,6 +75,9 @@ export default function CameraControls() {
                 const result = await response.json()
                 if (result.success) {
                     setCameraStatus(result.data)
+                    setCameraConnected(true)
+                } else {
+                    setCameraConnected(false)
                 }
             }
         } catch (error) {
@@ -110,18 +157,31 @@ export default function CameraControls() {
     }, [])
 
     return (
-        <Panel className="camera-controls__panel">
-            <div className="camera-controls__wrapper">
-                <h3 className="camera-controls__title">
-                    <Camera size={20} />
-                    Camera Controls
-                </h3>
+        <>
+            <Panel className="camera-controls__panel">
+                <div className="camera-controls__wrapper">
+                    <h3 className="camera-controls__title">
+                        <Camera size={20} />
+                        Camera Controls
+                    </h3>
 
-                {/* Camera Status */}
-                <div className="camera-status">
-                    <div className={`status-indicator ${cameraStatus?.available ? 'connected' : 'disconnected'}`}>
-                        {cameraStatus?.available ? '● Connected' : '● Disconnected'}
+                    {/* Camera Connection Button */}
+                    <div className="camera-connection">
+                        <Button
+                            className="camera-connect-btn"
+                            onClick={handleCameraConnection}
+                            disabled={isConnecting}
+                        >
+                            <Camera size={18} />
+                            {isConnecting ? 'Connecting...' : cameraConnected ? 'Disconnect Camera' : 'Connect Camera'}
+                        </Button>
                     </div>
+
+                    {/* Camera Status */}
+                    <div className="camera-status">
+                        <div className={`status-indicator ${cameraStatus?.available || cameraConnected ? 'connected' : 'disconnected'}`}>
+                            {cameraStatus?.available || cameraConnected ? '● Connected' : '● Disconnected'}
+                        </div>
                     {cameraStatus && (
                         <div className="status-details">
                             <span>Temp: {cameraStatus.temperature.toFixed(1)}°C</span>
@@ -267,5 +327,12 @@ export default function CameraControls() {
                 </div>
             </div>
         </Panel>
+
+        <CameraChooser
+            isOpen={showChooser}
+            onClose={() => setShowChooser(false)}
+            onSelect={handleCameraSelect}
+        />
+        </>
     )
 }

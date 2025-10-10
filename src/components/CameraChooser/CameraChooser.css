@@ -1,0 +1,139 @@
+.camera-chooser-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.camera-chooser-modal {
+    background-color: #1a1a2e;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    border: 1px solid #333;
+}
+
+.camera-chooser-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #333;
+    background-color: #0f0f1e;
+}
+
+.camera-chooser-header h2 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.camera-chooser-close {
+    background: none;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+}
+
+.camera-chooser-close:hover {
+    color: #ff4444;
+}
+
+.camera-chooser-content {
+    padding: 20px;
+    overflow-y: auto;
+    max-height: calc(80vh - 80px);
+}
+
+.camera-chooser-loading,
+.camera-chooser-error {
+    text-align: center;
+    padding: 40px 20px;
+    font-size: 16px;
+}
+
+.camera-chooser-loading {
+    color: #aaaaaa;
+}
+
+.camera-chooser-error {
+    color: #ff6b6b;
+    background-color: rgba(255, 107, 107, 0.1);
+    border-radius: 5px;
+}
+
+.camera-chooser-instruction {
+    color: #cccccc;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.camera-chooser-list {
+    margin-bottom: 20px;
+}
+
+.camera-chooser-item {
+    padding: 15px;
+    margin-bottom: 10px;
+    background-color: #0f0f1e;
+    border: 2px solid #333;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.camera-chooser-item:hover {
+    border-color: #4a90e2;
+    background-color: #1a1a2e;
+}
+
+.camera-chooser-item.selected {
+    border-color: #4a90e2;
+    background-color: rgba(74, 144, 226, 0.1);
+}
+
+.camera-chooser-item-name {
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.camera-chooser-item-id {
+    color: #888888;
+    font-size: 12px;
+    font-family: monospace;
+}
+
+.camera-chooser-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.camera-chooser-buttons button {
+    width: 100%;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.camera-chooser-buttons button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

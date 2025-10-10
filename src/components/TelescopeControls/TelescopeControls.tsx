@@ -1,15 +1,18 @@
 import './TelescopeControls.css'
 import Button from '@/components/Button/Button.tsx'
-import { ArrowBigUp, ArrowBigDown, ArrowBigRight, ArrowBigLeft, Telescope } from 'lucide-react'
+import { ArrowBigUp, ArrowBigDown, ArrowBigRight, ArrowBigLeft, Telescope, ListTree } from 'lucide-react'
 import { moveLeft, moveRight, moveUp, moveDown } from '@/services/controlsUtils'
 import { useStellarium } from '@/hooks/useStellarium'
 import telescopeAPI from '@/services/telescopeAPI'
 import { useState } from 'react'
+import TelescopeChooser from '@/components/TelescopeChooser/TelescopeChooser'
 
 export default function TelescopeControls() {
     const stellarium = useStellarium();
     const [isConnecting, setIsConnecting] = useState(false);
     const [simScopeConnected, setSimScopeConnected] = useState(false);
+    const [showChooser, setShowChooser] = useState(false);
+    const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
 
     console.log('TelescopeControls render - stellarium:', stellarium);
 
@@ -24,89 +27,85 @@ export default function TelescopeControls() {
             console.log('Stellarium not ready yet');
         }
 
-        // Also move SimScope if connected
+        // Also move telescope if connected
         if (simScopeConnected) {
             try {
-                console.log(`Moving SimScope ${direction}...`);
+                console.log(`Moving telescope ${direction}...`);
 
-                // Get current telescope position from SimScope
+                // Get current telescope position
                 const status = await telescopeAPI.getTelescopeStatus();
                 if (status.success && status.data && status.data.connected) {
-                    const currentRA = status.data.rightAscension;
-                    const currentDec = status.data.declination;
+                    const currentAlt = status.data.altitude;
+                    const currentAz = status.data.azimuth;
 
-                    // Calculate new coordinates based on direction
-                    let newRA = currentRA;
-                    let newDec = currentDec;
-                    const stepSize = 0.05; // Smaller step for finer control
+                    // Calculate new Alt/Az coordinates based on direction
+                    let newAlt = currentAlt;
+                    let newAz = currentAz;
+                    const stepSize = 2; // 2 degrees per step
 
                     switch (direction) {
                         case 'left':
-                            newRA = currentRA - stepSize;
+                            // Moving left decreases azimuth (West)
+                            newAz = currentAz - stepSize;
+                            if (newAz < 0) newAz += 360;
                             break;
                         case 'right':
-                            newRA = currentRA + stepSize;
+                            // Moving right increases azimuth (East)
+                            newAz = currentAz + stepSize;
+                            if (newAz >= 360) newAz -= 360;
                             break;
                         case 'up':
-                            newDec = Math.min(currentDec + stepSize, 90);
+                            // Moving up increases altitude (North)
+                            newAlt = Math.min(currentAlt + stepSize, 90);
                             break;
                         case 'down':
-                            newDec = Math.max(currentDec - stepSize, -90);
+                            // Moving down decreases altitude (South)
+                            newAlt = Math.max(currentAlt - stepSize, 0);
                             break;
                     }
 
-                    // Keep RA in 0-24 range
-                    if (newRA < 0) newRA += 24;
-                    if (newRA >= 24) newRA -= 24;
+                    console.log(`Moving from Alt:${currentAlt.toFixed(2)}°, Az:${currentAz.toFixed(2)}° to Alt:${newAlt.toFixed(2)}°, Az:${newAz.toFixed(2)}°`);
 
-                    console.log(`Moving from RA:${currentRA.toFixed(4)}, Dec:${currentDec.toFixed(4)} to RA:${newRA.toFixed(4)}, Dec:${newDec.toFixed(4)}`);
+                    // Convert Alt/Az to RA/Dec for slewing
+                    // We'll use the backend to handle this conversion
+                    const response = await fetch('http://localhost:8000/api/telescope/slew/altaz', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            altitude: newAlt,
+                            azimuth: newAz
+                        })
+                    });
 
-                    await telescopeAPI.slewToCoordinates(newRA, newDec);
-                    console.log(`✅ SimScope moved ${direction} - command sent successfully`);
+                    const result = await response.json();
+                    if (result.success) {
+                        console.log(`✅ Telescope moved ${direction} - command sent successfully`);
+                    } else {
+                        console.error(`❌ Move failed:`, result.message);
+                    }
                 } else {
-                    console.log(`❌ SimScope not properly connected or no position data available`);
+                    console.log(`❌ Telescope not properly connected or no position data available`);
                 }
             } catch (error) {
-                console.error(`❌ Error moving SimScope ${direction}:`, error);
+                console.error(`❌ Error moving telescope ${direction}:`, error);
             }
         }
     };
 
-    const connectToSimScope = async () => {
-        if (simScopeConnected) {
-            try {
-                console.log('Disconnecting from telescope...');
-                await telescopeAPI.disconnectTelescope();
-                setSimScopeConnected(false);
-                console.log('Disconnected successfully');
-            } catch (error) {
-                console.error('Error disconnecting from SimScope:', error);
-            }
-            return;
-        }
-
+    const handleTelescopeSelect = async (driverId: string) => {
+        setSelectedDriverId(driverId);
         setIsConnecting(true);
-        console.log('Attempting to connect to telescope...');
+        console.log(`Connecting to telescope: ${driverId}`);
 
         try {
-            // First test if server is reachable
-            const healthResponse = await fetch('http://localhost:8000/api/health');
-            console.log('Health check response:', healthResponse.status);
-
-            if (!healthResponse.ok) {
-                throw new Error(`Server not reachable: ${healthResponse.status}`);
-            }
-
-            const healthData = await healthResponse.json();
-            console.log('Health data:', healthData);
-
-            // Now try to connect
-            const response = await telescopeAPI.connectTelescope();
+            const response = await telescopeAPI.connectTelescope(driverId);
             console.log('Connect response:', response);
 
             setSimScopeConnected(response.success);
             if (response.success) {
-                console.log('✅ Connected to SimScope:', response.message);
+                console.log('✅ Connected to telescope:', response.message);
 
                 // Test getting status after connection
                 try {
@@ -119,11 +118,29 @@ export default function TelescopeControls() {
                 console.error('❌ Connection failed:', response.message);
             }
         } catch (error) {
-            console.error('❌ Error connecting to SimScope:', error);
+            console.error('❌ Error connecting to telescope:', error);
             setSimScopeConnected(false);
         } finally {
             setIsConnecting(false);
         }
+    };
+
+    const connectToSimScope = async () => {
+        if (simScopeConnected) {
+            try {
+                console.log('Disconnecting from telescope...');
+                await telescopeAPI.disconnectTelescope();
+                setSimScopeConnected(false);
+                setSelectedDriverId(null);
+                console.log('Disconnected successfully');
+            } catch (error) {
+                console.error('Error disconnecting from telescope:', error);
+            }
+            return;
+        }
+
+        // Show chooser when trying to connect
+        setShowChooser(true);
     };
 
     const testMovement = async () => {
@@ -152,55 +169,63 @@ export default function TelescopeControls() {
     };
     
     return (
-        <div className="telescope-controls__wrapper">
-            <Button
-                className="telescope-controls__panel telescope-controls__left"
-                borderRadius="3px"
-                onClick={() => handleMove(moveLeft, 'left')}
-            >
-                <ArrowBigLeft size={30} color="#ffffff" />
-            </Button>
-            <Button
-                className="telescope-controls__panel telescope-controls__up"
-                borderRadius="3px"
-                onClick={() => handleMove(moveUp, 'up')}
-            >
-                <ArrowBigUp size={30} color="#ffffff" />
-            </Button>
-            <Button
-                className="telescope-controls__panel telescope-controls__down"
-                borderRadius="3px"
-                onClick={() => handleMove(moveDown, 'down')}
-            >
-                <ArrowBigDown size={30} color="#ffffff" />
-            </Button>
-            <Button
-                className="telescope-controls__panel telescope-controls__right"
-                borderRadius="3px"
-                onClick={() => handleMove(moveRight, 'right')}
-            >
-                <ArrowBigRight size={30} color="#ffffff" />
-            </Button>
-            <Button
-                className="telescope-controls__panel telescope-controls__simscope"
-                borderRadius="3px"
-                onClick={connectToSimScope}
-            >
-                <Telescope size={30} color={simScopeConnected ? "#00ff00" : "#ffffff"} />
-                <span style={{ marginLeft: '8px', fontSize: '14px' }}>
-                    {isConnecting ? 'Connecting...' :
-                     simScopeConnected ? 'Disconnect SimScope' : 'Connect to SimScope'}
-                </span>
-            </Button>
-            {simScopeConnected && (
+        <>
+            <div className="telescope-controls__wrapper">
                 <Button
-                    className="telescope-controls__panel telescope-controls__test"
+                    className="telescope-controls__panel telescope-controls__left"
                     borderRadius="3px"
-                    onClick={testMovement}
+                    onClick={() => handleMove(moveLeft, 'left')}
                 >
-                    <span style={{ fontSize: '14px' }}>Test Movement</span>
+                    <ArrowBigLeft size={30} color="#ffffff" />
                 </Button>
-            )}
-        </div>
+                <Button
+                    className="telescope-controls__panel telescope-controls__up"
+                    borderRadius="3px"
+                    onClick={() => handleMove(moveUp, 'up')}
+                >
+                    <ArrowBigUp size={30} color="#ffffff" />
+                </Button>
+                <Button
+                    className="telescope-controls__panel telescope-controls__down"
+                    borderRadius="3px"
+                    onClick={() => handleMove(moveDown, 'down')}
+                >
+                    <ArrowBigDown size={30} color="#ffffff" />
+                </Button>
+                <Button
+                    className="telescope-controls__panel telescope-controls__right"
+                    borderRadius="3px"
+                    onClick={() => handleMove(moveRight, 'right')}
+                >
+                    <ArrowBigRight size={30} color="#ffffff" />
+                </Button>
+                <Button
+                    className="telescope-controls__panel telescope-controls__simscope"
+                    borderRadius="3px"
+                    onClick={connectToSimScope}
+                >
+                    <Telescope size={30} color={simScopeConnected ? "#00ff00" : "#ffffff"} />
+                    <span style={{ marginLeft: '8px', fontSize: '14px' }}>
+                        {isConnecting ? 'Connecting...' :
+                         simScopeConnected ? 'Disconnect' : 'Connect Telescope'}
+                    </span>
+                </Button>
+                {simScopeConnected && (
+                    <Button
+                        className="telescope-controls__panel telescope-controls__test"
+                        borderRadius="3px"
+                        onClick={testMovement}
+                    >
+                        <span style={{ fontSize: '14px' }}>Test Movement</span>
+                    </Button>
+                )}
+            </div>
+
+            <TelescopeChooser
+                isOpen={showChooser}
+                onClose={() => setShowChooser(false)}
+                onSelect={handleTelescopeSelect}
+            />
+        </>
     )
 }
