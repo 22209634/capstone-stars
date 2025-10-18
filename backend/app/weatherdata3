@@ -1,0 +1,87 @@
+# backend/app/utils/weather_data.py
+import json
+import requests
+from typing import Optional, Dict
+
+# ThingSpeak field endpoints (channel 270748)
+TEMP_URL = "https://api.thingspeak.com/channels/270748/fields/1.json?results=1"
+HUMIDITY_URL = "https://api.thingspeak.com/channels/270748/fields/2.json?results=1"
+DEW_URL = "https://api.thingspeak.com/channels/270748/fields/4.json?results=1"
+
+def _fetch_latest_value(url: str) -> Optional[float]:
+    try:
+        r = requests.get(url, timeout=8)
+        r.raise_for_status()
+        data = r.json()
+        feeds = data.get("feeds", [])
+        if not feeds:
+            return None
+        # The last key of the feed object will be the field value
+        value = list(feeds[-1].values())[-1]
+        return float(value) if value is not None else None
+    except Exception:
+        return None
+
+def _status_from_temp_dew(temp: Optional[float], dew: Optional[float]) -> Dict:
+    """
+    Safety rule (as per your docs):
+      - GREEN if |T - Dew| >= 10 °C
+      - YELLOW if 5 ≤ |T - Dew| < 10 °C
+      - RED if |T - Dew| < 5 °C  (unsafe: park telescope)
+    """
+    if temp is None or dew is None:
+        return {"status": "UNKNOWN", "difference": None, "safe_to_image": False,
+                "message": "Missing temperature or dew point."}
+
+    diff = abs(temp - dew)
+    if diff >= 10:
+        return {"status": "GREEN", "difference": diff, "safe_to_image": True,
+                "message": "Conditions good for imaging."}
+    if diff >= 5:
+        return {"status": "YELLOW", "difference": diff, "safe_to_image": True,
+                "message": "Borderline—monitor conditions closely."}
+    return {"status": "RED", "difference": diff, "safe_to_image": False,
+            "message": "Imaging unsafe—park telescope."}
+
+def _status_from_humidity(h: Optional[float]) -> Dict:
+    if h is None:
+        return {"humidity_status": "UNKNOWN", "message": "Humidity unavailable."}
+    if h >= 85:
+        return {"humidity_status": "RED", "message": "High humidity—equipment at risk."}
+    if h >= 70:
+        return {"humidity_status": "YELLOW", "message": "Humidity rising—monitor closely."}
+    return {"humidity_status": "GREEN", "message": "Humidity within safe range."}
+
+def get_weather_summary() -> Dict:
+    """Return a single JSON with temp, dew, humidity, status + guidance."""
+    temp = _fetch_latest_value(TEMP_URL)
+    dew = _fetch_latest_value(DEW_URL)
+    humidity = _fetch_latest_value(HUMIDITY_URL)
+
+    temp_dew = _status_from_temp_dew(temp, dew)
+    hum = _status_from_humidity(humidity)
+
+    # overall status: RED if any RED; else YELLOW if any YELLOW; else GREEN
+    statuses = [temp_dew["status"], hum["humidity_status"]]
+    if "RED" in statuses:
+        overall = "RED"
+    elif "YELLOW" in statuses:
+        overall = "YELLOW"
+    else:
+        overall = "GREEN" if "GREEN" in statuses else "UNKNOWN"
+
+    return {
+        "temperature_c": temp,
+        "dew_point_c": dew,
+        "humidity_percent": humidity,
+        "temp_dew_difference_c": temp_dew["difference"],
+        "temp_dew_status": temp_dew["status"],
+        "humidity_status": hum["humidity_status"],
+        "overall_status": overall,
+        "safe_to_image": temp_dew["safe_to_image"] and hum["humidity_status"] != "RED",
+        "message": f"{temp_dew['message']} {hum['message']}"
+    }
+    
+if __name__ == "__main__":
+    result = get_weather_summary()
+    print(json.dumps(result, indent=2))
