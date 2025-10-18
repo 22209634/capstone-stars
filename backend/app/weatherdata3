@@ -1,9 +1,7 @@
-# backend/app/utils/weather_data.py
 import json
 import requests
 from typing import Optional, Dict
 
-# ThingSpeak field endpoints (channel 270748)
 TEMP_URL = "https://api.thingspeak.com/channels/270748/fields/1.json?results=1"
 HUMIDITY_URL = "https://api.thingspeak.com/channels/270748/fields/2.json?results=1"
 DEW_URL = "https://api.thingspeak.com/channels/270748/fields/4.json?results=1"
@@ -84,4 +82,5 @@ def get_weather_summary() -> Dict:
     
 if __name__ == "__main__":
     result = get_weather_summary()
+
     print(json.dumps(result, indent=2))
