@@ -25,10 +25,6 @@
     border-right: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.weather-data__panel:not(:first-child) .weather-data__item p:last-child {;
-    border-left: 1px solid rgba(255, 255, 255, 0.3);
-}
-
 .weather-data__item p {
     margin: 0;
     display: flex;

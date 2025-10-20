@@ -5,3 +5,6 @@ uvicorn[standard]==0.37.0
 # Astronomy libraries
 astropy==7.1.0
 astroquery==0.4.11
+
+# HTTP client for ASCOM Alpaca
+aiohttp==3.13.1

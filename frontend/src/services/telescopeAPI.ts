@@ -18,6 +18,25 @@ interface APIResponse<T = any> {
   data?: T;
 }
 
+interface WeatherData {
+  temperature: number;
+  dew_point: number;
+  humidity: number;
+  pressure: number;
+  difference: number;
+  status: 'GREEN' | 'YELLOW' | 'RED';
+  message: string;
+}
+
+interface AscomDevice {
+  deviceName: string;
+  deviceType: string;
+  deviceNumber: number;
+  uniqueID: string;
+  ipAddress: string;
+  port: number;
+}
+
 class TelescopeAPI {
   private baseURL: string;
 
@@ -83,8 +102,27 @@ class TelescopeAPI {
   async slewToObject(objectId: string): Promise<APIResponse> {
     return this.makeRequest(`/telescope/slew/object/${objectId}`, { method: 'POST' });
   }
+
+  async getWeatherData(): Promise<APIResponse<WeatherData>> {
+    return this.makeRequest<WeatherData>('/weather');
+  }
+
+  async discoverAscomDevices(): Promise<APIResponse<AscomDevice[]>> {
+    return this.makeRequest<AscomDevice[]>('/telescope/discover');
+  }
+
+  async connectToAscomDevice(deviceId: string, ipAddress: string, port: number, deviceNumber: number): Promise<APIResponse> {
+    return this.makeRequest('/telescope/connect-ascom', {
+      method: 'POST',
+      body: JSON.stringify({ deviceId, ipAddress, port, deviceNumber }),
+    });
+  }
+
+  async disconnectAscom(): Promise<APIResponse> {
+    return this.makeRequest('/telescope/disconnect-ascom', { method: 'POST' });
+  }
 }
 
 const telescopeAPI = new TelescopeAPI();
 export default telescopeAPI;
-export type { TelescopeStatus, APIResponse };
+export type { TelescopeStatus, APIResponse, WeatherData, AscomDevice };

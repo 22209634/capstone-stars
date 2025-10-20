@@ -12,9 +12,10 @@ type ButtonProps = {
     onMouseLeave?: () => void;
     onTouchStart?: () => void;
     onTouchEnd?: () => void;
+    disabled?: boolean;
 }
 
-export default function Button({ children, borderRadius, className, onClick, onMouseDown, onMouseUp, onMouseLeave, onTouchStart, onTouchEnd }: ButtonProps) {
+export default function Button({ children, borderRadius, className, onClick, onMouseDown, onMouseUp, onMouseLeave, onTouchStart, onTouchEnd, disabled }: ButtonProps) {
     return (
         <Panel className={`btn__panel ${className ?? ''}`} borderRadius={borderRadius}>
             <button
@@ -25,6 +26,7 @@ export default function Button({ children, borderRadius, className, onClick, onM
                 onMouseLeave={onMouseLeave}
                 onTouchStart={onTouchStart}
                 onTouchEnd={onTouchEnd}
+                disabled={disabled}
             >
                 {children}
             </button>

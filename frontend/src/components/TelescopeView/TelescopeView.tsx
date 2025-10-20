@@ -9,7 +9,7 @@ export default function TelescopeView() {
     const rotationInterval = useRef<any>(null); // Rotation
     const coordinateUpdateInterval = useRef<any>(null); // Coordinate updates
     const telescopeContext = useTelescopeContext();
-    const { setAladinInstance, setCoordinates } = telescopeContext;
+    const { setAladinInstance, setCoordinates, connectionMode } = telescopeContext;
 
     // Store context in ref so interval can access latest values
     const contextRef = useRef(telescopeContext);
@@ -74,24 +74,40 @@ export default function TelescopeView() {
 
         // Cleanup
         return () => {
+            console.log('[TelescopeView] Component unmounting - clearing all intervals');
             // Stop rotation
             if (rotationInterval.current) {
                 clearInterval(rotationInterval.current);
+                rotationInterval.current = null;
             }
             // Stop coordinate updates
             if (coordinateUpdateInterval.current) {
                 clearInterval(coordinateUpdateInterval.current);
+                coordinateUpdateInterval.current = null;
             }
         };
     }, []);
 
     const startSkyRotation = () => {
+        // Clear any existing interval first
+        if (rotationInterval.current) {
+            clearInterval(rotationInterval.current);
+            rotationInterval.current = null;
+        }
+
         // Earth rotates 360° in 24 hours = 15° per hour = 0.25° per minute
         // We'll simulate this with small increments
         rotationInterval.current = setInterval(() => {
             // Access latest context values from ref
-            const { isParked: currentIsParked, status: currentStatus } = contextRef.current;
+            const { isParked: currentIsParked, status: currentStatus, connectionMode: currentMode } = contextRef.current;
 
+            // CRITICAL: Exit immediately if not in simulation mode
+            if (currentMode !== 'simulation') {
+                console.log('[TelescopeView] Rotation interval detected non-simulation mode - skipping');
+                return;
+            }
+
+            // Only rotate in simulation mode
             if (aladinInstance.current && !currentIsParked && currentStatus !== 'Slewing') {
                 const currentRaDec = aladinInstance.current.getRaDec();
 
@@ -108,14 +124,51 @@ export default function TelescopeView() {
     };
 
     const startCoordinateUpdates = () => {
+        // Clear any existing interval first
+        if (coordinateUpdateInterval.current) {
+            clearInterval(coordinateUpdateInterval.current);
+            coordinateUpdateInterval.current = null;
+        }
+
         // Update context with current coordinates periodically
         coordinateUpdateInterval.current = setInterval(() => {
+            const { connectionMode: currentMode } = contextRef.current;
+
+            // CRITICAL: Exit immediately if not in simulation mode - DO NOT update coordinates
+            if (currentMode !== 'simulation') {
+                console.log('[TelescopeView] Coordinate update interval detected non-simulation mode - should not be running!');
+                return;
+            }
+
+            // Only update coordinates from simulation in simulation mode
             if (aladinInstance.current) {
                 const currentRaDec = aladinInstance.current.getRaDec();
+                console.log('[TelescopeView] Setting coordinates from simulation:', currentRaDec[0], currentRaDec[1]);
                 setCoordinates(currentRaDec[0], currentRaDec[1]);
             }
         }, 100) as any;  // Update every 100ms
     };
+
+    // Stop intervals IMMEDIATELY when switching to ASCOM mode
+    useEffect(() => {
+        if (connectionMode === 'ascom') {
+            console.log('[TelescopeView] Connection mode changed to ASCOM - stopping all intervals immediately');
+            // Clear intervals when switching to ASCOM
+            if (rotationInterval.current) {
+                clearInterval(rotationInterval.current);
+                rotationInterval.current = null;
+            }
+            if (coordinateUpdateInterval.current) {
+                clearInterval(coordinateUpdateInterval.current);
+                coordinateUpdateInterval.current = null;
+            }
+        } else if (connectionMode === 'simulation' && !rotationInterval.current && aladinInstance.current) {
+            // Restart intervals if switching back to simulation
+            console.log('[TelescopeView] Connection mode changed to simulation - restarting intervals');
+            startSkyRotation();
+            startCoordinateUpdates();
+        }
+    }, [connectionMode]);
 
     return (
         <div className="telescope-view__wrapper">
