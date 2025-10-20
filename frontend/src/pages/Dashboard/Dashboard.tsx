@@ -13,7 +13,7 @@ import { TelescopeProvider, useTelescopeContext } from "@/contexts/TelescopeCont
 function DashboardContent() {
     const { connectionMode } = useTelescopeContext();
 
-    console.log('[Dashboard] Current connection mode:', connectionMode);
+    //console.log('[Dashboard] Current connection mode:', connectionMode);
 
     return (
         <article className="dashboard">

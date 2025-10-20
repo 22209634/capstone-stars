@@ -1,4 +1,4 @@
-// Authored by Claude Code
+// Partially Authored by Claude Code
 
 import React, { createContext, useContext, useState, useRef, useEffect, type ReactNode } from 'react';
 import telescopeAPI from '@/services/telescopeAPI';
@@ -14,8 +14,8 @@ interface TelescopeContextType {
     setCoordinates: (ra: number, dec: number) => void;
     status: TelescopeStatus;
     setStatus: (status: TelescopeStatus) => void;
-    isParked: boolean;
-    setIsParked: (parked: boolean) => void;
+    isTracking: boolean;
+    setIsTracking: (tracking: boolean) => void;
     moveUp: () => void;
     moveDown: () => void;
     moveLeft: () => void;
@@ -25,7 +25,7 @@ interface TelescopeContextType {
     startMoveDown: () => void;
     startMoveLeft: () => void;
     startMoveRight: () => void;
-    togglePark: () => void;
+    toggleTracking: () => void;
     gotoCoordinates: (ra: number, dec: number) => void;
     connectionMode: ConnectionMode;
     setConnectionMode: (mode: ConnectionMode) => void;
@@ -52,20 +52,24 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
     const [ra, setRa] = useState<number>(0);
     const [dec, setDec] = useState<number>(0);
     const [status, setStatus] = useState<TelescopeStatus>('Idle');
-    const [isParked, setIsParked] = useState<boolean>(false);
+    const [isTracking, setIsTracking] = useState<boolean>(false);
     const [connectionMode, setConnectionMode] = useState<ConnectionMode>('simulation');
     const [connectedDevice, setConnectedDevice] = useState<string | null>(null);
     const slewTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const continuousMoveInterval = useRef<any>(null);
+    // Track the target coordinates for ASCOM continuous movement
+    const targetCoordinatesRef = useRef<{ra: number, dec: number}>({ra: 0, dec: 0});
 
     const setCoordinates = (newRa: number, newDec: number) => {
-        console.log('[TelescopeContext] Accepting coordinate update:', newRa, newDec);
+        //console.log('[TelescopeContext] Accepting coordinate update:', newRa, newDec);
         setRa(newRa);
         setDec(newDec);
+        // Update target coordinates ref when actual coordinates update
+        targetCoordinatesRef.current = {ra: newRa, dec: newDec};
     };
 
     const slewTo = (newRa: number, newDec: number) => {
-        if (!aladinInstance || isParked) return;
+        if (!aladinInstance || !isTracking) return;
 
         setStatus('Slewing');
 
@@ -92,18 +96,23 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
     };
 
     const moveUp = () => {
-        console.log('[moveUp] Called - isParked:', isParked, 'connectionMode:', connectionMode);
-        if (isParked) {
-            console.log('[moveUp] Telescope is parked, ignoring command');
+        console.log('[moveUp] Called - isTracking:', isTracking, 'connectionMode:', connectionMode);
+        if (!isTracking) {
+            console.log('[moveUp] Telescope is not tracking, ignoring command');
             return;
         }
 
         if (connectionMode === 'ascom') {
-            // Use current RA/Dec state and ASCOM API
-            // Use larger increment for real telescope (1 degree = 60 arc-minutes)
-            const newDec = Math.min(90, dec + 1.0); // Clamp to max +90°
-            console.log('[moveUp] ASCOM mode - Moving from RA:', ra, 'Dec:', dec, 'to Dec:', newDec);
-            telescopeAPI.slewToCoordinates(ra, newDec)
+            // Use target coordinates from ref (updates immediately, not waiting for poll)
+            const currentRa = targetCoordinatesRef.current.ra;
+            const currentDec = targetCoordinatesRef.current.dec;
+            const newDec = Math.min(90, currentDec + 1); // Clamp to max +90° (0.25° = 15 arc-minutes)
+            console.log('[moveUp] ASCOM mode - Moving from RA:', currentRa, 'Dec:', currentDec, 'to Dec:', newDec);
+
+            // Update target coordinates immediately
+            targetCoordinatesRef.current = {ra: currentRa, dec: newDec};
+
+            telescopeAPI.slewToCoordinates(currentRa, newDec)
                 .then((response) => {
                     console.log('[moveUp] ASCOM response:', response);
                     if (response.success) {
@@ -123,17 +132,23 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
     };
 
     const moveDown = () => {
-        console.log('[moveDown] Called - isParked:', isParked, 'connectionMode:', connectionMode);
-        if (isParked) {
-            console.log('[moveDown] Telescope is parked, ignoring command');
+        console.log('[moveDown] Called - isTracking:', isTracking, 'connectionMode:', connectionMode);
+        if (!isTracking) {
+            console.log('[moveDown] Telescope is not tracking, ignoring command');
             return;
         }
 
         if (connectionMode === 'ascom') {
-            // Use larger increment for real telescope (1 degree = 60 arc-minutes)
-            const newDec = Math.max(-90, dec - 1.0); // Clamp to min -90°
-            console.log('[moveDown] ASCOM mode - Moving from RA:', ra, 'Dec:', dec, 'to Dec:', newDec);
-            telescopeAPI.slewToCoordinates(ra, newDec)
+            // Use target coordinates from ref (updates immediately, not waiting for poll)
+            const currentRa = targetCoordinatesRef.current.ra;
+            const currentDec = targetCoordinatesRef.current.dec;
+            const newDec = Math.max(-90, currentDec - 1); // Clamp to min -90° (0.25° = 15 arc-minutes)
+            console.log('[moveDown] ASCOM mode - Moving from RA:', currentRa, 'Dec:', currentDec, 'to Dec:', newDec);
+
+            // Update target coordinates immediately
+            targetCoordinatesRef.current = {ra: currentRa, dec: newDec};
+
+            telescopeAPI.slewToCoordinates(currentRa, newDec)
                 .then((response) => {
                     console.log('[moveDown] ASCOM response:', response);
                     if (response.success) {
@@ -153,17 +168,23 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
     };
 
     const moveLeft = () => {
-        console.log('[moveLeft] Called - isParked:', isParked, 'connectionMode:', connectionMode);
-        if (isParked) {
-            console.log('[moveLeft] Telescope is parked, ignoring command');
+        console.log('[moveLeft] Called - isTracking:', isTracking, 'connectionMode:', connectionMode);
+        if (!isTracking) {
+            console.log('[moveLeft] Telescope is not tracking, ignoring command');
             return;
         }
 
         if (connectionMode === 'ascom') {
-            // Use larger increment for real telescope (1 degree)
-            const newRa = (ra + 1.0) % 360; // Wrap around 0-360
-            console.log('[moveLeft] ASCOM mode - Moving from RA:', ra, 'Dec:', dec, 'to RA:', newRa);
-            telescopeAPI.slewToCoordinates(newRa, dec)
+            // Use target coordinates from ref (updates immediately, not waiting for poll)
+            const currentRa = targetCoordinatesRef.current.ra;
+            const currentDec = targetCoordinatesRef.current.dec;
+            const newRa = (currentRa + 1.0) % 360; // Wrap around 0-360
+            console.log('[moveLeft] ASCOM mode - Moving from RA:', currentRa, 'Dec:', currentDec, 'to RA:', newRa);
+
+            // Update target coordinates immediately
+            targetCoordinatesRef.current = {ra: newRa, dec: currentDec};
+
+            telescopeAPI.slewToCoordinates(newRa, currentDec)
                 .then((response) => {
                     console.log('[moveLeft] ASCOM response:', response);
                     if (response.success) {
@@ -183,17 +204,23 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
     };
 
     const moveRight = () => {
-        console.log('[moveRight] Called - isParked:', isParked, 'connectionMode:', connectionMode);
-        if (isParked) {
-            console.log('[moveRight] Telescope is parked, ignoring command');
+        console.log('[moveRight] Called - isTracking:', isTracking, 'connectionMode:', connectionMode);
+        if (!isTracking) {
+            console.log('[moveRight] Telescope is not tracking, ignoring command');
             return;
         }
 
         if (connectionMode === 'ascom') {
-            // Use larger increment for real telescope (1 degree)
-            const newRa = (ra - 1.0 + 360) % 360; // Wrap around 0-360
-            console.log('[moveRight] ASCOM mode - Moving from RA:', ra, 'Dec:', dec, 'to RA:', newRa);
-            telescopeAPI.slewToCoordinates(newRa, dec)
+            // Use target coordinates from ref (updates immediately, not waiting for poll)
+            const currentRa = targetCoordinatesRef.current.ra;
+            const currentDec = targetCoordinatesRef.current.dec;
+            const newRa = (currentRa - 1.0 + 360) % 360; // Wrap around 0-360
+            console.log('[moveRight] ASCOM mode - Moving from RA:', currentRa, 'Dec:', currentDec, 'to RA:', newRa);
+
+            // Update target coordinates immediately
+            targetCoordinatesRef.current = {ra: newRa, dec: currentDec};
+
+            telescopeAPI.slewToCoordinates(newRa, currentDec)
                 .then((response) => {
                     console.log('[moveRight] ASCOM response:', response);
                     if (response.success) {
@@ -212,33 +239,57 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
         }
     };
 
-    const togglePark = () => {
-        const newParkedState = !isParked;
-        setIsParked(newParkedState);
-        setStatus(newParkedState ? 'Tracking' : 'Idle');
+    const toggleTracking = () => {
+        const newTrackingState = !isTracking;
+        setIsTracking(newTrackingState);
+
+        // If toggling in ASCOM mode, send tracking command to telescope
+        if (connectionMode === 'ascom') {
+            telescopeAPI.setTracking(newTrackingState)
+                .then((response) => {
+                    if (response.success) {
+                        console.log('[toggleTracking] Tracking', newTrackingState ? 'enabled' : 'disabled');
+                        setStatus(newTrackingState ? 'Tracking' : 'Idle');
+                    }
+                })
+                .catch((error) => {
+                    console.error('[toggleTracking] Failed to set tracking:', error);
+                });
+        } else {
+            // Simulation mode - just update status
+            setStatus(newTrackingState ? 'Tracking' : 'Idle');
+        }
     };
 
     // Continuous movement handlers
     const stopMove = () => {
+        console.log('[stopMove] Called - interval exists:', !!continuousMoveInterval.current);
         if (continuousMoveInterval.current) {
             clearInterval(continuousMoveInterval.current);
             continuousMoveInterval.current = null;
+            console.log('[stopMove] Interval cleared, setting status to Idle');
             setStatus('Idle');
         }
     };
 
     const startMoveUp = () => {
-        if (isParked || continuousMoveInterval.current) return;
+        console.log('[startMoveUp] Called - isTracking:', isTracking, 'existing interval:', !!continuousMoveInterval.current);
+        if (!isTracking || continuousMoveInterval.current) {
+            console.log('[startMoveUp] Blocked - isTracking:', isTracking, 'interval exists:', !!continuousMoveInterval.current);
+            return;
+        }
         moveUp(); // First immediate move
         // Use slower interval for ASCOM (2 seconds), faster for simulation (100ms)
         const interval = connectionMode === 'ascom' ? 2000 : 100;
+        console.log('[startMoveUp] Starting interval with', interval, 'ms delay');
         continuousMoveInterval.current = setInterval(() => {
+            console.log('[startMoveUp] Interval firing - calling moveUp');
             moveUp();
         }, interval);
     };
 
     const startMoveDown = () => {
-        if (isParked || continuousMoveInterval.current) return;
+        if (!isTracking || continuousMoveInterval.current) return;
         moveDown();
         // Use slower interval for ASCOM (2 seconds), faster for simulation (100ms)
         const interval = connectionMode === 'ascom' ? 2000 : 100;
@@ -248,7 +299,7 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
     };
 
     const startMoveLeft = () => {
-        if (isParked || continuousMoveInterval.current) return;
+        if (!isTracking || continuousMoveInterval.current) return;
         moveLeft();
         // Use slower interval for ASCOM (2 seconds), faster for simulation (100ms)
         const interval = connectionMode === 'ascom' ? 2000 : 100;
@@ -258,7 +309,7 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
     };
 
     const startMoveRight = () => {
-        if (isParked || continuousMoveInterval.current) return;
+        if (!isTracking || continuousMoveInterval.current) return;
         moveRight();
         // Use slower interval for ASCOM (2 seconds), faster for simulation (100ms)
         const interval = connectionMode === 'ascom' ? 2000 : 100;
@@ -268,7 +319,7 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
     };
 
     const gotoCoordinates = (targetRa: number, targetDec: number) => {
-        console.log('[gotoCoordinates] Called - targetRA:', targetRa, 'targetDec:', targetDec, 'connectionMode:', connectionMode, 'isParked:', isParked);
+        console.log('[gotoCoordinates] Called - targetRA:', targetRa, 'targetDec:', targetDec, 'connectionMode:', connectionMode, 'isTracking:', isTracking);
 
         // Clamp declination to valid range
         const clampedDec = Math.max(-90, Math.min(90, targetDec));
@@ -290,12 +341,12 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
                 .catch((error) => {
                     console.error('[gotoCoordinates] Failed to slew telescope:', error);
                 });
-        } else if (aladinInstance && !isParked) {
+        } else if (aladinInstance && isTracking) {
             // Use simulation
             console.log('[gotoCoordinates] Simulation mode - Using slewTo');
             slewTo(normalizedRa, clampedDec);
         } else {
-            console.log('[gotoCoordinates] Cannot execute - aladinInstance:', aladinInstance, 'isParked:', isParked);
+            console.log('[gotoCoordinates] Cannot execute - aladinInstance:', aladinInstance, 'isTracking:', isTracking);
         }
     };
 
@@ -324,7 +375,7 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
             try {
                 const response = await telescopeAPI.getTelescopeStatus();
                 if (response.success && response.data) {
-                    console.log('[ASCOM Poll] Setting coordinates from ASCOM:', response.data.rightAscension, response.data.declination, 'Slewing:', response.data.slewing, 'Tracking:', response.data.tracking);
+                    //console.log('[ASCOM Poll] Setting coordinates from ASCOM:', response.data.rightAscension, response.data.declination, 'Slewing:', response.data.slewing, 'Tracking:', response.data.tracking);
                     setCoordinates(response.data.rightAscension, response.data.declination);
                     setStatus(response.data.slewing ? 'Slewing' : response.data.tracking ? 'Tracking' : 'Idle');
                 }
@@ -344,8 +395,8 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
         setCoordinates,
         status,
         setStatus,
-        isParked,
-        setIsParked,
+        isTracking,
+        setIsTracking,
         moveUp,
         moveDown,
         moveLeft,
@@ -355,7 +406,7 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
         startMoveDown,
         startMoveLeft,
         startMoveRight,
-        togglePark,
+        toggleTracking,
         gotoCoordinates,
         connectionMode,
         setConnectionMode,
