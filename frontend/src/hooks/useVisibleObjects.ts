@@ -26,6 +26,11 @@ export const useVisibleObjects = (): UseVisibleObjectsReturn => {
     };
 
     fetchObjects();
+
+    // Refresh visible objects every 5 minutes to update as objects rise/set
+    const interval = setInterval(fetchObjects, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
   }, []);
 
   return { objects, loading, error };

@@ -59,14 +59,14 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
 
         // Hold/continuous movement base step sizes (initial speed when starting to hold)
         decHoldBaseStep: 0.05,           // Declination (up/down) hold base step in degrees
-        raHoldBaseStep: 0.05,            // Right Ascension (left/right) hold base step in degrees
+        raHoldBaseStep: 0.02,            // Right Ascension (left/right) hold base step in degrees
 
         // Acceleration settings for holding buttons
-        accelerationRate: 1.1,           // How fast acceleration increases (1.1 = 10% per interval)
+        accelerationRate: 1.3,           // How fast acceleration increases (1.0 = no acceleration, 1.1 = 10% per interval, 1.3 = 30% per interval)
         maxAccelerationMultiplier: 50,   // Maximum acceleration cap (50x the base speed)
 
         // Timing settings
-        holdIntervalSimulation: 100,     // Interval between movements in simulation mode (ms)
+        holdIntervalSimulation: 200,     // Interval between movements in simulation mode (ms)
         holdIntervalAscom: 2000,         // Interval between movements in ASCOM mode (ms)
     };
 
@@ -328,9 +328,8 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
             // Increment counter
             accelerationIntervalCountRef.current++;
 
-            // Calculate acceleration: 1.3^interval for faster acceleration
-            // Interval 1 → 1.3x, Interval 2 → 1.69x, Interval 3 → 2.2x, Interval 5 → 3.71x
-            accelerationMultiplierRef.current = Math.pow(1.3, accelerationIntervalCountRef.current);
+            // Calculate acceleration using configured rate
+            accelerationMultiplierRef.current = Math.pow(MOVEMENT_CONFIG.accelerationRate, accelerationIntervalCountRef.current);
 
             // Cap the maximum multiplier to prevent extreme speeds
             const cappedMultiplier = Math.min(accelerationMultiplierRef.current, MOVEMENT_CONFIG.maxAccelerationMultiplier);
@@ -361,8 +360,8 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
             // Increment counter
             accelerationIntervalCountRef.current++;
 
-            // Calculate acceleration: 1.3^interval for faster acceleration
-            accelerationMultiplierRef.current = Math.pow(1.3, accelerationIntervalCountRef.current);
+            // Calculate acceleration using configured rate
+            accelerationMultiplierRef.current = Math.pow(MOVEMENT_CONFIG.accelerationRate, accelerationIntervalCountRef.current);
 
             // Cap the maximum multiplier to prevent extreme speeds
             const cappedMultiplier = Math.min(accelerationMultiplierRef.current, MOVEMENT_CONFIG.maxAccelerationMultiplier);
@@ -393,8 +392,8 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
             // Increment counter
             accelerationIntervalCountRef.current++;
 
-            // Calculate acceleration: 1.3^interval for faster acceleration
-            accelerationMultiplierRef.current = Math.pow(1.3, accelerationIntervalCountRef.current);
+            // Calculate acceleration using configured rate
+            accelerationMultiplierRef.current = Math.pow(MOVEMENT_CONFIG.accelerationRate, accelerationIntervalCountRef.current);
 
             // Cap the maximum multiplier to prevent extreme speeds
             const cappedMultiplier = Math.min(accelerationMultiplierRef.current, MOVEMENT_CONFIG.maxAccelerationMultiplier);
@@ -425,8 +424,8 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
             // Increment counter
             accelerationIntervalCountRef.current++;
 
-            // Calculate acceleration: 1.3^interval for faster acceleration
-            accelerationMultiplierRef.current = Math.pow(1.3, accelerationIntervalCountRef.current);
+            // Calculate acceleration using configured rate
+            accelerationMultiplierRef.current = Math.pow(MOVEMENT_CONFIG.accelerationRate, accelerationIntervalCountRef.current);
 
             // Cap the maximum multiplier to prevent extreme speeds
             const cappedMultiplier = Math.min(accelerationMultiplierRef.current, MOVEMENT_CONFIG.maxAccelerationMultiplier);
