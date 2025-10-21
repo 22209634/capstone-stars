@@ -99,7 +99,7 @@ export default function TelescopeView() {
         // We'll simulate this with small increments
         rotationInterval.current = setInterval(() => {
             // Access latest context values from ref
-            const { isParked: currentIsParked, status: currentStatus, connectionMode: currentMode } = contextRef.current;
+            const { isTracking: currentIsTracking, status: currentStatus, connectionMode: currentMode } = contextRef.current;
 
             // CRITICAL: Exit immediately if not in simulation mode
             if (currentMode !== 'simulation') {
@@ -107,8 +107,9 @@ export default function TelescopeView() {
                 return;
             }
 
-            // Only rotate in simulation mode
-            if (aladinInstance.current && !currentIsParked && currentStatus !== 'Slewing') {
+            // Only rotate when NOT tracking (simulating Earth's rotation)
+            // When tracking is ON, the telescope follows the stars, so no rotation
+            if (aladinInstance.current && !currentIsTracking && currentStatus !== 'Slewing') {
                 const currentRaDec = aladinInstance.current.getRaDec();
 
                 // Move Right Ascension (RA) to simulate Earth's rotation

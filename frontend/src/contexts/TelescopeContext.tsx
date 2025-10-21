@@ -69,7 +69,7 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
     };
 
     const slewTo = (newRa: number, newDec: number) => {
-        if (!aladinInstance || !isTracking) return;
+        if (!aladinInstance) return;
 
         setStatus('Slewing');
 
@@ -97,8 +97,9 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
 
     const moveUp = () => {
         console.log('[moveUp] Called - isTracking:', isTracking, 'connectionMode:', connectionMode);
-        if (!isTracking) {
-            console.log('[moveUp] Telescope is not tracking, ignoring command');
+        // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
+        if (connectionMode === 'ascom' && !isTracking) {
+            console.log('[moveUp] ASCOM mode - Telescope is not tracking, ignoring command');
             return;
         }
 
@@ -133,8 +134,9 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
 
     const moveDown = () => {
         console.log('[moveDown] Called - isTracking:', isTracking, 'connectionMode:', connectionMode);
-        if (!isTracking) {
-            console.log('[moveDown] Telescope is not tracking, ignoring command');
+        // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
+        if (connectionMode === 'ascom' && !isTracking) {
+            console.log('[moveDown] ASCOM mode - Telescope is not tracking, ignoring command');
             return;
         }
 
@@ -169,8 +171,9 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
 
     const moveLeft = () => {
         console.log('[moveLeft] Called - isTracking:', isTracking, 'connectionMode:', connectionMode);
-        if (!isTracking) {
-            console.log('[moveLeft] Telescope is not tracking, ignoring command');
+        // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
+        if (connectionMode === 'ascom' && !isTracking) {
+            console.log('[moveLeft] ASCOM mode - Telescope is not tracking, ignoring command');
             return;
         }
 
@@ -205,8 +208,9 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
 
     const moveRight = () => {
         console.log('[moveRight] Called - isTracking:', isTracking, 'connectionMode:', connectionMode);
-        if (!isTracking) {
-            console.log('[moveRight] Telescope is not tracking, ignoring command');
+        // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
+        if (connectionMode === 'ascom' && !isTracking) {
+            console.log('[moveRight] ASCOM mode - Telescope is not tracking, ignoring command');
             return;
         }
 
@@ -274,8 +278,9 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
 
     const startMoveUp = () => {
         console.log('[startMoveUp] Called - isTracking:', isTracking, 'existing interval:', !!continuousMoveInterval.current);
-        if (!isTracking || continuousMoveInterval.current) {
-            console.log('[startMoveUp] Blocked - isTracking:', isTracking, 'interval exists:', !!continuousMoveInterval.current);
+        // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
+        if (continuousMoveInterval.current || (connectionMode === 'ascom' && !isTracking)) {
+            console.log('[startMoveUp] Blocked - interval exists:', !!continuousMoveInterval.current, 'ASCOM without tracking:', connectionMode === 'ascom' && !isTracking);
             return;
         }
         moveUp(); // First immediate move
@@ -289,7 +294,8 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
     };
 
     const startMoveDown = () => {
-        if (!isTracking || continuousMoveInterval.current) return;
+        // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
+        if (continuousMoveInterval.current || (connectionMode === 'ascom' && !isTracking)) return;
         moveDown();
         // Use slower interval for ASCOM (2 seconds), faster for simulation (100ms)
         const interval = connectionMode === 'ascom' ? 2000 : 100;
@@ -299,7 +305,8 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
     };
 
     const startMoveLeft = () => {
-        if (!isTracking || continuousMoveInterval.current) return;
+        // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
+        if (continuousMoveInterval.current || (connectionMode === 'ascom' && !isTracking)) return;
         moveLeft();
         // Use slower interval for ASCOM (2 seconds), faster for simulation (100ms)
         const interval = connectionMode === 'ascom' ? 2000 : 100;
@@ -309,7 +316,8 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
     };
 
     const startMoveRight = () => {
-        if (!isTracking || continuousMoveInterval.current) return;
+        // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
+        if (continuousMoveInterval.current || (connectionMode === 'ascom' && !isTracking)) return;
         moveRight();
         // Use slower interval for ASCOM (2 seconds), faster for simulation (100ms)
         const interval = connectionMode === 'ascom' ? 2000 : 100;
@@ -341,12 +349,12 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
                 .catch((error) => {
                     console.error('[gotoCoordinates] Failed to slew telescope:', error);
                 });
-        } else if (aladinInstance && isTracking) {
+        } else if (aladinInstance) {
             // Use simulation
             console.log('[gotoCoordinates] Simulation mode - Using slewTo');
             slewTo(normalizedRa, clampedDec);
         } else {
-            console.log('[gotoCoordinates] Cannot execute - aladinInstance:', aladinInstance, 'isTracking:', isTracking);
+            console.log('[gotoCoordinates] Cannot execute - aladinInstance:', aladinInstance);
         }
     };
 

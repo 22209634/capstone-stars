@@ -7,7 +7,7 @@ import { useState } from 'react'
 import { hmsToDegrees, dmsToDegrees } from '@/utils/coordinateUtils'
 
 export default function TelescopeControls() {
-    const { startMoveUp, startMoveDown, startMoveLeft, startMoveRight, stopMove, toggleTracking, isTracking, gotoCoordinates } = useTelescopeContext();
+    const { startMoveUp, startMoveDown, startMoveLeft, startMoveRight, stopMove, toggleTracking, isTracking, gotoCoordinates, connectionMode } = useTelescopeContext();
     const [showGotoPanel, setShowGotoPanel] = useState(false);
     const [raInput, setRaInput] = useState('');
     const [decInput, setDecInput] = useState('');
@@ -29,30 +29,36 @@ export default function TelescopeControls() {
         }
     };
 
+    // In ASCOM mode, buttons are disabled when not tracking
+    // In simulation mode, buttons are always enabled
+    const buttonsDisabled = connectionMode === 'ascom' && !isTracking;
+
     return (
         <>
             <div className="telescope-controls__wrapper">
             <Button
-                className={`telescope-controls__panel telescope-controls__left ${!isTracking ? 'disabled' : ''}`}
+                className={`telescope-controls__panel telescope-controls__left ${buttonsDisabled ? 'disabled' : ''}`}
                 borderRadius="3px"
                 onMouseDown={startMoveLeft}
                 onMouseUp={stopMove}
                 onMouseLeave={stopMove}
                 onTouchStart={startMoveLeft}
                 onTouchEnd={stopMove}
+                disabled={buttonsDisabled}
             >
-                <ArrowBigLeft size={30} color={!isTracking ? "#888888" : "#ffffff"} />
+                <ArrowBigLeft size={30} color={buttonsDisabled ? "#888888" : "#ffffff"} />
             </Button>
             <Button
-                className={`telescope-controls__panel telescope-controls__up ${!isTracking ? 'disabled' : ''}`}
+                className={`telescope-controls__panel telescope-controls__up ${buttonsDisabled ? 'disabled' : ''}`}
                 borderRadius="3px"
                 onMouseDown={startMoveUp}
                 onMouseUp={stopMove}
                 onMouseLeave={stopMove}
                 onTouchStart={startMoveUp}
                 onTouchEnd={stopMove}
+                disabled={buttonsDisabled}
             >
-                <ArrowBigUp size={30} color={!isTracking ? "#888888" : "#ffffff"} />
+                <ArrowBigUp size={30} color={buttonsDisabled ? "#888888" : "#ffffff"} />
             </Button>
             <Button
                 className={`telescope-controls__panel telescope-controls__park ${isTracking ? 'tracking' : ''}`}
@@ -62,26 +68,28 @@ export default function TelescopeControls() {
                 <span className="telescope-controls__text">{isTracking ? 'STOP TRACKING' : 'TRACK'}</span>
             </Button>
             <Button
-                className={`telescope-controls__panel telescope-controls__down ${!isTracking ? 'disabled' : ''}`}
+                className={`telescope-controls__panel telescope-controls__down ${buttonsDisabled ? 'disabled' : ''}`}
                 borderRadius="3px"
                 onMouseDown={startMoveDown}
                 onMouseUp={stopMove}
                 onMouseLeave={stopMove}
                 onTouchStart={startMoveDown}
                 onTouchEnd={stopMove}
+                disabled={buttonsDisabled}
             >
-                <ArrowBigDown size={30} color={!isTracking ? "#888888" : "#ffffff"} />
+                <ArrowBigDown size={30} color={buttonsDisabled ? "#888888" : "#ffffff"} />
             </Button>
             <Button
-                className={`telescope-controls__panel telescope-controls__right ${!isTracking ? 'disabled' : ''}`}
+                className={`telescope-controls__panel telescope-controls__right ${buttonsDisabled ? 'disabled' : ''}`}
                 borderRadius="3px"
                 onMouseDown={startMoveRight}
                 onMouseUp={stopMove}
                 onMouseLeave={stopMove}
                 onTouchStart={startMoveRight}
                 onTouchEnd={stopMove}
+                disabled={buttonsDisabled}
             >
-                <ArrowBigRight size={30} color={!isTracking ? "#888888" : "#ffffff"} />
+                <ArrowBigRight size={30} color={buttonsDisabled ? "#888888" : "#ffffff"} />
             </Button>
             <Button
                 className="telescope-controls__panel telescope-controls__goto"
