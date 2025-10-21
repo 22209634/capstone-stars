@@ -169,7 +169,7 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
         }
     };
 
-    const moveLeft = (stepSize: number = 0.25) => {
+    const moveLeft = (stepSize: number = 5.0) => {
         console.log('[moveLeft] Called - isTracking:', isTracking, 'connectionMode:', connectionMode, 'stepSize:', stepSize);
         // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
         if (connectionMode === 'ascom' && !isTracking) {
@@ -206,7 +206,7 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
         }
     };
 
-    const moveRight = (stepSize: number = 0.25) => {
+    const moveRight = (stepSize: number = 5.0) => {
         console.log('[moveRight] Called - isTracking:', isTracking, 'connectionMode:', connectionMode, 'stepSize:', stepSize);
         // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
         if (connectionMode === 'ascom' && !isTracking) {
@@ -307,22 +307,22 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
     const startMoveLeft = () => {
         // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
         if (continuousMoveInterval.current || (connectionMode === 'ascom' && !isTracking)) return;
-        moveLeft(1.0); // 1.0 degree step for continuous movement
+        moveLeft(20.0); // 20.0 degree step for continuous RA movement
         // Use slower interval for ASCOM (2 seconds), faster for simulation (100ms)
         const interval = connectionMode === 'ascom' ? 2000 : 100;
         continuousMoveInterval.current = setInterval(() => {
-            moveLeft(1.0); // 1.0 degree step for continuous movement
+            moveLeft(20.0); // 20.0 degree step for continuous RA movement
         }, interval);
     };
 
     const startMoveRight = () => {
         // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
         if (continuousMoveInterval.current || (connectionMode === 'ascom' && !isTracking)) return;
-        moveRight(1.0); // 1.0 degree step for continuous movement
+        moveRight(20.0); // 20.0 degree step for continuous RA movement
         // Use slower interval for ASCOM (2 seconds), faster for simulation (100ms)
         const interval = connectionMode === 'ascom' ? 2000 : 100;
         continuousMoveInterval.current = setInterval(() => {
-            moveRight(1.0); // 1.0 degree step for continuous movement
+            moveRight(20.0); // 20.0 degree step for continuous RA movement
         }, interval);
     };
 
