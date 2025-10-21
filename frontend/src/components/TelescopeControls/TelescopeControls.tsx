@@ -74,10 +74,10 @@ export default function TelescopeControls() {
                 className={`telescope-controls__panel telescope-controls__left ${buttonsDisabled ? 'disabled' : ''}`}
                 borderRadius="3px"
                 onMouseDown={() => handleMoveStart(startMoveLeft)}
-                onMouseUp={() => handleMoveEnd(() => moveLeft(5.0))}
+                onMouseUp={() => handleMoveEnd(() => moveLeft())}
                 onMouseLeave={() => handleMoveEnd(() => {})}
                 onTouchStart={() => handleMoveStart(startMoveLeft)}
-                onTouchEnd={() => handleMoveEnd(() => moveLeft(5.0))}
+                onTouchEnd={() => handleMoveEnd(() => moveLeft())}
                 disabled={buttonsDisabled}
             >
                 <ArrowBigLeft size={30} color={buttonsDisabled ? "#888888" : "#ffffff"} />
@@ -117,10 +117,10 @@ export default function TelescopeControls() {
                 className={`telescope-controls__panel telescope-controls__right ${buttonsDisabled ? 'disabled' : ''}`}
                 borderRadius="3px"
                 onMouseDown={() => handleMoveStart(startMoveRight)}
-                onMouseUp={() => handleMoveEnd(() => moveRight(5.0))}
+                onMouseUp={() => handleMoveEnd(() => moveRight())}
                 onMouseLeave={() => handleMoveEnd(() => {})}
                 onTouchStart={() => handleMoveStart(startMoveRight)}
-                onTouchEnd={() => handleMoveEnd(() => moveRight(5.0))}
+                onTouchEnd={() => handleMoveEnd(() => moveRight())}
                 disabled={buttonsDisabled}
             >
                 <ArrowBigRight size={30} color={buttonsDisabled ? "#888888" : "#ffffff"} />

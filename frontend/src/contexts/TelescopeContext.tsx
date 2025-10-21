@@ -48,6 +48,28 @@ interface TelescopeProviderProps {
 }
 
 export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }) => {
+    // Movement speed configuration - adjust these to control all movement speeds
+    const MOVEMENT_CONFIG = {
+        // Global settings
+        globalMultiplier: 1.0,           // Global speed multiplier (adjust this to speed up/slow down everything)
+
+        // Single-click movement step sizes (when you tap the button once)
+        decSingleClickStep: 0.25,        // Declination (up/down) single-click step in degrees
+        raSingleClickStep: 0.2,          // Right Ascension (left/right) single-click step in degrees
+
+        // Hold/continuous movement base step sizes (initial speed when starting to hold)
+        decHoldBaseStep: 0.05,           // Declination (up/down) hold base step in degrees
+        raHoldBaseStep: 0.05,            // Right Ascension (left/right) hold base step in degrees
+
+        // Acceleration settings for holding buttons
+        accelerationRate: 1.1,           // How fast acceleration increases (1.1 = 10% per interval)
+        maxAccelerationMultiplier: 50,   // Maximum acceleration cap (50x the base speed)
+
+        // Timing settings
+        holdIntervalSimulation: 100,     // Interval between movements in simulation mode (ms)
+        holdIntervalAscom: 2000,         // Interval between movements in ASCOM mode (ms)
+    };
+
     const [aladinInstance, setAladinInstance] = useState<any>(null);
     const [ra, setRa] = useState<number>(0);
     const [dec, setDec] = useState<number>(0);
@@ -59,6 +81,9 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
     const continuousMoveInterval = useRef<any>(null);
     // Track the target coordinates for ASCOM continuous movement
     const targetCoordinatesRef = useRef<{ra: number, dec: number}>({ra: 0, dec: 0});
+    // Track acceleration for continuous movement
+    const accelerationMultiplierRef = useRef<number>(1);
+    const accelerationIntervalCountRef = useRef<number>(0);
 
     const setCoordinates = (newRa: number, newDec: number) => {
         //console.log('[TelescopeContext] Accepting coordinate update:', newRa, newDec);
@@ -95,7 +120,7 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
         }, 500);
     };
 
-    const moveUp = (stepSize: number = 0.25) => {
+    const moveUp = (stepSize: number = MOVEMENT_CONFIG.decSingleClickStep * MOVEMENT_CONFIG.globalMultiplier) => {
         console.log('[moveUp] Called - isTracking:', isTracking, 'connectionMode:', connectionMode, 'stepSize:', stepSize);
         // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
         if (connectionMode === 'ascom' && !isTracking) {
@@ -132,7 +157,7 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
         }
     };
 
-    const moveDown = (stepSize: number = 0.25) => {
+    const moveDown = (stepSize: number = MOVEMENT_CONFIG.decSingleClickStep * MOVEMENT_CONFIG.globalMultiplier) => {
         console.log('[moveDown] Called - isTracking:', isTracking, 'connectionMode:', connectionMode, 'stepSize:', stepSize);
         // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
         if (connectionMode === 'ascom' && !isTracking) {
@@ -169,7 +194,7 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
         }
     };
 
-    const moveLeft = (stepSize: number = 5.0) => {
+    const moveLeft = (stepSize: number = MOVEMENT_CONFIG.raSingleClickStep * MOVEMENT_CONFIG.globalMultiplier) => {
         console.log('[moveLeft] Called - isTracking:', isTracking, 'connectionMode:', connectionMode, 'stepSize:', stepSize);
         // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
         if (connectionMode === 'ascom' && !isTracking) {
@@ -206,7 +231,7 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
         }
     };
 
-    const moveRight = (stepSize: number = 5.0) => {
+    const moveRight = (stepSize: number = MOVEMENT_CONFIG.raSingleClickStep * MOVEMENT_CONFIG.globalMultiplier) => {
         console.log('[moveRight] Called - isTracking:', isTracking, 'connectionMode:', connectionMode, 'stepSize:', stepSize);
         // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
         if (connectionMode === 'ascom' && !isTracking) {
@@ -271,7 +296,10 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
         if (continuousMoveInterval.current) {
             clearInterval(continuousMoveInterval.current);
             continuousMoveInterval.current = null;
-            console.log('[stopMove] Interval cleared, setting status to Idle');
+            // Reset acceleration
+            accelerationMultiplierRef.current = 1;
+            accelerationIntervalCountRef.current = 0;
+            console.log('[stopMove] Interval cleared, acceleration reset, setting status to Idle');
             setStatus('Idle');
         }
     };
@@ -283,46 +311,130 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
             console.log('[startMoveUp] Blocked - interval exists:', !!continuousMoveInterval.current, 'ASCOM without tracking:', connectionMode === 'ascom' && !isTracking);
             return;
         }
-        moveUp(1.0); // First immediate move with 1.0 degree step for continuous movement
+
+        // Reset acceleration on start
+        accelerationMultiplierRef.current = 1;
+        accelerationIntervalCountRef.current = 0;
+
+        // First immediate move with base step size
+        const baseStep = MOVEMENT_CONFIG.decHoldBaseStep * MOVEMENT_CONFIG.globalMultiplier;
+        moveUp(baseStep);
+
         // Use slower interval for ASCOM (2 seconds), faster for simulation (100ms)
-        const interval = connectionMode === 'ascom' ? 2000 : 100;
+        const interval = connectionMode === 'ascom' ? MOVEMENT_CONFIG.holdIntervalAscom : MOVEMENT_CONFIG.holdIntervalSimulation;
         console.log('[startMoveUp] Starting interval with', interval, 'ms delay');
+
         continuousMoveInterval.current = setInterval(() => {
-            console.log('[startMoveUp] Interval firing - calling moveUp');
-            moveUp(1.0); // 1.0 degree step for continuous movement
+            // Increment counter
+            accelerationIntervalCountRef.current++;
+
+            // Calculate acceleration: 1.3^interval for faster acceleration
+            // Interval 1 → 1.3x, Interval 2 → 1.69x, Interval 3 → 2.2x, Interval 5 → 3.71x
+            accelerationMultiplierRef.current = Math.pow(1.3, accelerationIntervalCountRef.current);
+
+            // Cap the maximum multiplier to prevent extreme speeds
+            const cappedMultiplier = Math.min(accelerationMultiplierRef.current, MOVEMENT_CONFIG.maxAccelerationMultiplier);
+
+            const stepSize = baseStep * cappedMultiplier;
+            console.log('[startMoveUp] Interval #', accelerationIntervalCountRef.current, 'multiplier:', cappedMultiplier.toFixed(2), 'stepSize:', stepSize.toFixed(3));
+
+            moveUp(stepSize);
         }, interval);
     };
 
     const startMoveDown = () => {
         // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
         if (continuousMoveInterval.current || (connectionMode === 'ascom' && !isTracking)) return;
-        moveDown(1.0); // 1.0 degree step for continuous movement
+
+        // Reset acceleration on start
+        accelerationMultiplierRef.current = 1;
+        accelerationIntervalCountRef.current = 0;
+
+        // First immediate move with base step size
+        const baseStep = MOVEMENT_CONFIG.decHoldBaseStep * MOVEMENT_CONFIG.globalMultiplier;
+        moveDown(baseStep);
+
         // Use slower interval for ASCOM (2 seconds), faster for simulation (100ms)
-        const interval = connectionMode === 'ascom' ? 2000 : 100;
+        const interval = connectionMode === 'ascom' ? MOVEMENT_CONFIG.holdIntervalAscom : MOVEMENT_CONFIG.holdIntervalSimulation;
+
         continuousMoveInterval.current = setInterval(() => {
-            moveDown(1.0); // 1.0 degree step for continuous movement
+            // Increment counter
+            accelerationIntervalCountRef.current++;
+
+            // Calculate acceleration: 1.3^interval for faster acceleration
+            accelerationMultiplierRef.current = Math.pow(1.3, accelerationIntervalCountRef.current);
+
+            // Cap the maximum multiplier to prevent extreme speeds
+            const cappedMultiplier = Math.min(accelerationMultiplierRef.current, MOVEMENT_CONFIG.maxAccelerationMultiplier);
+
+            const stepSize = baseStep * cappedMultiplier;
+            console.log('[startMoveDown] Interval #', accelerationIntervalCountRef.current, 'multiplier:', cappedMultiplier.toFixed(2), 'stepSize:', stepSize.toFixed(3));
+
+            moveDown(stepSize);
         }, interval);
     };
 
     const startMoveLeft = () => {
         // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
         if (continuousMoveInterval.current || (connectionMode === 'ascom' && !isTracking)) return;
-        moveLeft(20.0); // 20.0 degree step for continuous RA movement
+
+        // Reset acceleration on start
+        accelerationMultiplierRef.current = 1;
+        accelerationIntervalCountRef.current = 0;
+
+        // First immediate move with base step size for RA
+        const baseStep = MOVEMENT_CONFIG.raHoldBaseStep * MOVEMENT_CONFIG.globalMultiplier;
+        moveLeft(baseStep);
+
         // Use slower interval for ASCOM (2 seconds), faster for simulation (100ms)
-        const interval = connectionMode === 'ascom' ? 2000 : 100;
+        const interval = connectionMode === 'ascom' ? MOVEMENT_CONFIG.holdIntervalAscom : MOVEMENT_CONFIG.holdIntervalSimulation;
+
         continuousMoveInterval.current = setInterval(() => {
-            moveLeft(20.0); // 20.0 degree step for continuous RA movement
+            // Increment counter
+            accelerationIntervalCountRef.current++;
+
+            // Calculate acceleration: 1.3^interval for faster acceleration
+            accelerationMultiplierRef.current = Math.pow(1.3, accelerationIntervalCountRef.current);
+
+            // Cap the maximum multiplier to prevent extreme speeds
+            const cappedMultiplier = Math.min(accelerationMultiplierRef.current, MOVEMENT_CONFIG.maxAccelerationMultiplier);
+
+            const stepSize = baseStep * cappedMultiplier;
+            console.log('[startMoveLeft] Interval #', accelerationIntervalCountRef.current, 'multiplier:', cappedMultiplier.toFixed(2), 'stepSize:', stepSize.toFixed(3));
+
+            moveLeft(stepSize);
         }, interval);
     };
 
     const startMoveRight = () => {
         // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
         if (continuousMoveInterval.current || (connectionMode === 'ascom' && !isTracking)) return;
-        moveRight(20.0); // 20.0 degree step for continuous RA movement
+
+        // Reset acceleration on start
+        accelerationMultiplierRef.current = 1;
+        accelerationIntervalCountRef.current = 0;
+
+        // First immediate move with base step size for RA
+        const baseStep = MOVEMENT_CONFIG.raHoldBaseStep * MOVEMENT_CONFIG.globalMultiplier;
+        moveRight(baseStep);
+
         // Use slower interval for ASCOM (2 seconds), faster for simulation (100ms)
-        const interval = connectionMode === 'ascom' ? 2000 : 100;
+        const interval = connectionMode === 'ascom' ? MOVEMENT_CONFIG.holdIntervalAscom : MOVEMENT_CONFIG.holdIntervalSimulation;
+
         continuousMoveInterval.current = setInterval(() => {
-            moveRight(20.0); // 20.0 degree step for continuous RA movement
+            // Increment counter
+            accelerationIntervalCountRef.current++;
+
+            // Calculate acceleration: 1.3^interval for faster acceleration
+            accelerationMultiplierRef.current = Math.pow(1.3, accelerationIntervalCountRef.current);
+
+            // Cap the maximum multiplier to prevent extreme speeds
+            const cappedMultiplier = Math.min(accelerationMultiplierRef.current, MOVEMENT_CONFIG.maxAccelerationMultiplier);
+
+            const stepSize = baseStep * cappedMultiplier;
+            console.log('[startMoveRight] Interval #', accelerationIntervalCountRef.current, 'multiplier:', cappedMultiplier.toFixed(2), 'stepSize:', stepSize.toFixed(3));
+
+            moveRight(stepSize);
         }, interval);
     };
 
