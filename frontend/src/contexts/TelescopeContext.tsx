@@ -75,8 +75,8 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
             raSingleClickStep: 0.2,          // Right Ascension (left/right) single-click step in degrees
 
             // Hold/continuous movement base step sizes (initial speed when starting to hold)
-            decHoldBaseStep: 0.05,           // Declination (up/down) hold base step in degrees
-            raHoldBaseStep: 0.05,            // Right Ascension (left/right) hold base step in degrees
+            decHoldBaseStep: 0.25,           // Declination (up/down) hold base step in degrees
+            raHoldBaseStep: 0.2,            // Right Ascension (left/right) hold base step in degrees
 
             // Acceleration settings for holding buttons
             accelerationRate: 1.3,           // How fast acceleration increases (1.0 = no acceleration, 1.1 = 10% per interval, 1.3 = 30% per interval)
@@ -507,6 +507,63 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
 
         return () => clearInterval(pollInterval);
     }, [connectionMode]);
+
+    // Keyboard controls for telescope movement (Arrow keys and WASD)
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            // Ignore if user is typing in an input field
+            const target = event.target as HTMLElement;
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+                return;
+            }
+
+            const key = event.key.toLowerCase();
+
+            // Prevent default browser behavior for arrow keys
+            if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) {
+                event.preventDefault();
+            }
+
+            // Map keys to movement functions
+            switch (key) {
+                case 'w':
+                case 'arrowup':
+                    startMoveUp();
+                    break;
+                case 's':
+                case 'arrowdown':
+                    startMoveDown();
+                    break;
+                case 'a':
+                case 'arrowleft':
+                    startMoveLeft();
+                    break;
+                case 'd':
+                case 'arrowright':
+                    startMoveRight();
+                    break;
+            }
+        };
+
+        const handleKeyUp = (event: KeyboardEvent) => {
+            const key = event.key.toLowerCase();
+
+            // Only handle movement keys
+            if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].includes(key)) {
+                stopMove();
+            }
+        };
+
+        // Add event listeners
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+
+        // Cleanup
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+        };
+    }, [startMoveUp, startMoveDown, startMoveLeft, startMoveRight, stopMove]);
 
     const value: TelescopeContextType = {
         aladinInstance,
