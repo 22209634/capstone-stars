@@ -16,10 +16,10 @@ interface TelescopeContextType {
     setStatus: (status: TelescopeStatus) => void;
     isTracking: boolean;
     setIsTracking: (tracking: boolean) => void;
-    moveUp: () => void;
-    moveDown: () => void;
-    moveLeft: () => void;
-    moveRight: () => void;
+    moveUp: (stepSize?: number) => void;
+    moveDown: (stepSize?: number) => void;
+    moveLeft: (stepSize?: number) => void;
+    moveRight: (stepSize?: number) => void;
     startMoveUp: () => void;
     stopMove: () => void;
     startMoveDown: () => void;
@@ -95,8 +95,8 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
         }, 500);
     };
 
-    const moveUp = () => {
-        console.log('[moveUp] Called - isTracking:', isTracking, 'connectionMode:', connectionMode);
+    const moveUp = (stepSize: number = 0.25) => {
+        console.log('[moveUp] Called - isTracking:', isTracking, 'connectionMode:', connectionMode, 'stepSize:', stepSize);
         // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
         if (connectionMode === 'ascom' && !isTracking) {
             console.log('[moveUp] ASCOM mode - Telescope is not tracking, ignoring command');
@@ -107,8 +107,8 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
             // Use target coordinates from ref (updates immediately, not waiting for poll)
             const currentRa = targetCoordinatesRef.current.ra;
             const currentDec = targetCoordinatesRef.current.dec;
-            const newDec = Math.min(90, currentDec + 1); // Clamp to max +90° (0.25° = 15 arc-minutes)
-            console.log('[moveUp] ASCOM mode - Moving from RA:', currentRa, 'Dec:', currentDec, 'to Dec:', newDec);
+            const newDec = Math.min(90, currentDec + stepSize);
+            console.log('[moveUp] ASCOM mode - Moving from RA:', currentRa, 'Dec:', currentDec, 'to Dec:', newDec, 'stepSize:', stepSize);
 
             // Update target coordinates immediately
             targetCoordinatesRef.current = {ra: currentRa, dec: newDec};
@@ -124,16 +124,16 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
                     console.error('[moveUp] Failed to move telescope:', error);
                 });
         } else if (aladinInstance) {
-            // Simulation mode - smaller increment for smooth animation
+            // Simulation mode - use provided step size
             const currentRaDec = aladinInstance.getRaDec();
-            const newDec = Math.min(90, currentRaDec[1] + 0.05);
-            console.log('[moveUp] Simulation mode - Moving from Dec:', currentRaDec[1], 'to Dec:', newDec);
+            const newDec = Math.min(90, currentRaDec[1] + stepSize);
+            console.log('[moveUp] Simulation mode - Moving from Dec:', currentRaDec[1], 'to Dec:', newDec, 'stepSize:', stepSize);
             slewTo(currentRaDec[0], newDec);
         }
     };
 
-    const moveDown = () => {
-        console.log('[moveDown] Called - isTracking:', isTracking, 'connectionMode:', connectionMode);
+    const moveDown = (stepSize: number = 0.25) => {
+        console.log('[moveDown] Called - isTracking:', isTracking, 'connectionMode:', connectionMode, 'stepSize:', stepSize);
         // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
         if (connectionMode === 'ascom' && !isTracking) {
             console.log('[moveDown] ASCOM mode - Telescope is not tracking, ignoring command');
@@ -144,8 +144,8 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
             // Use target coordinates from ref (updates immediately, not waiting for poll)
             const currentRa = targetCoordinatesRef.current.ra;
             const currentDec = targetCoordinatesRef.current.dec;
-            const newDec = Math.max(-90, currentDec - 1); // Clamp to min -90° (0.25° = 15 arc-minutes)
-            console.log('[moveDown] ASCOM mode - Moving from RA:', currentRa, 'Dec:', currentDec, 'to Dec:', newDec);
+            const newDec = Math.max(-90, currentDec - stepSize);
+            console.log('[moveDown] ASCOM mode - Moving from RA:', currentRa, 'Dec:', currentDec, 'to Dec:', newDec, 'stepSize:', stepSize);
 
             // Update target coordinates immediately
             targetCoordinatesRef.current = {ra: currentRa, dec: newDec};
@@ -161,16 +161,16 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
                     console.error('[moveDown] Failed to move telescope:', error);
                 });
         } else if (aladinInstance) {
-            // Simulation mode - smaller increment for smooth animation
+            // Simulation mode - use provided step size
             const currentRaDec = aladinInstance.getRaDec();
-            const newDec = Math.max(-90, currentRaDec[1] - 0.05);
-            console.log('[moveDown] Simulation mode - Moving from Dec:', currentRaDec[1], 'to Dec:', newDec);
+            const newDec = Math.max(-90, currentRaDec[1] - stepSize);
+            console.log('[moveDown] Simulation mode - Moving from Dec:', currentRaDec[1], 'to Dec:', newDec, 'stepSize:', stepSize);
             slewTo(currentRaDec[0], newDec);
         }
     };
 
-    const moveLeft = () => {
-        console.log('[moveLeft] Called - isTracking:', isTracking, 'connectionMode:', connectionMode);
+    const moveLeft = (stepSize: number = 0.25) => {
+        console.log('[moveLeft] Called - isTracking:', isTracking, 'connectionMode:', connectionMode, 'stepSize:', stepSize);
         // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
         if (connectionMode === 'ascom' && !isTracking) {
             console.log('[moveLeft] ASCOM mode - Telescope is not tracking, ignoring command');
@@ -181,8 +181,8 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
             // Use target coordinates from ref (updates immediately, not waiting for poll)
             const currentRa = targetCoordinatesRef.current.ra;
             const currentDec = targetCoordinatesRef.current.dec;
-            const newRa = (currentRa + 1.0) % 360; // Wrap around 0-360
-            console.log('[moveLeft] ASCOM mode - Moving from RA:', currentRa, 'Dec:', currentDec, 'to RA:', newRa);
+            const newRa = (currentRa + stepSize) % 360; // Wrap around 0-360
+            console.log('[moveLeft] ASCOM mode - Moving from RA:', currentRa, 'Dec:', currentDec, 'to RA:', newRa, 'stepSize:', stepSize);
 
             // Update target coordinates immediately
             targetCoordinatesRef.current = {ra: newRa, dec: currentDec};
@@ -198,16 +198,16 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
                     console.error('[moveLeft] Failed to move telescope:', error);
                 });
         } else if (aladinInstance) {
-            // Simulation mode - smaller increment for smooth animation
+            // Simulation mode - use provided step size
             const currentRaDec = aladinInstance.getRaDec();
-            const newRa = (currentRaDec[0] + 0.05) % 360;
-            console.log('[moveLeft] Simulation mode - Moving from RA:', currentRaDec[0], 'to RA:', newRa);
+            const newRa = (currentRaDec[0] + stepSize) % 360;
+            console.log('[moveLeft] Simulation mode - Moving from RA:', currentRaDec[0], 'to RA:', newRa, 'stepSize:', stepSize);
             slewTo(newRa, currentRaDec[1]);
         }
     };
 
-    const moveRight = () => {
-        console.log('[moveRight] Called - isTracking:', isTracking, 'connectionMode:', connectionMode);
+    const moveRight = (stepSize: number = 0.25) => {
+        console.log('[moveRight] Called - isTracking:', isTracking, 'connectionMode:', connectionMode, 'stepSize:', stepSize);
         // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
         if (connectionMode === 'ascom' && !isTracking) {
             console.log('[moveRight] ASCOM mode - Telescope is not tracking, ignoring command');
@@ -218,8 +218,8 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
             // Use target coordinates from ref (updates immediately, not waiting for poll)
             const currentRa = targetCoordinatesRef.current.ra;
             const currentDec = targetCoordinatesRef.current.dec;
-            const newRa = (currentRa - 1.0 + 360) % 360; // Wrap around 0-360
-            console.log('[moveRight] ASCOM mode - Moving from RA:', currentRa, 'Dec:', currentDec, 'to RA:', newRa);
+            const newRa = (currentRa - stepSize + 360) % 360; // Wrap around 0-360
+            console.log('[moveRight] ASCOM mode - Moving from RA:', currentRa, 'Dec:', currentDec, 'to RA:', newRa, 'stepSize:', stepSize);
 
             // Update target coordinates immediately
             targetCoordinatesRef.current = {ra: newRa, dec: currentDec};
@@ -235,10 +235,10 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
                     console.error('[moveRight] Failed to move telescope:', error);
                 });
         } else if (aladinInstance) {
-            // Simulation mode - smaller increment for smooth animation
+            // Simulation mode - use provided step size
             const currentRaDec = aladinInstance.getRaDec();
-            const newRa = (currentRaDec[0] - 0.05 + 360) % 360;
-            console.log('[moveRight] Simulation mode - Moving from RA:', currentRaDec[0], 'to RA:', newRa);
+            const newRa = (currentRaDec[0] - stepSize + 360) % 360;
+            console.log('[moveRight] Simulation mode - Moving from RA:', currentRaDec[0], 'to RA:', newRa, 'stepSize:', stepSize);
             slewTo(newRa, currentRaDec[1]);
         }
     };
@@ -283,46 +283,46 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
             console.log('[startMoveUp] Blocked - interval exists:', !!continuousMoveInterval.current, 'ASCOM without tracking:', connectionMode === 'ascom' && !isTracking);
             return;
         }
-        moveUp(); // First immediate move
+        moveUp(1.0); // First immediate move with 1.0 degree step for continuous movement
         // Use slower interval for ASCOM (2 seconds), faster for simulation (100ms)
         const interval = connectionMode === 'ascom' ? 2000 : 100;
         console.log('[startMoveUp] Starting interval with', interval, 'ms delay');
         continuousMoveInterval.current = setInterval(() => {
             console.log('[startMoveUp] Interval firing - calling moveUp');
-            moveUp();
+            moveUp(1.0); // 1.0 degree step for continuous movement
         }, interval);
     };
 
     const startMoveDown = () => {
         // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
         if (continuousMoveInterval.current || (connectionMode === 'ascom' && !isTracking)) return;
-        moveDown();
+        moveDown(1.0); // 1.0 degree step for continuous movement
         // Use slower interval for ASCOM (2 seconds), faster for simulation (100ms)
         const interval = connectionMode === 'ascom' ? 2000 : 100;
         continuousMoveInterval.current = setInterval(() => {
-            moveDown();
+            moveDown(1.0); // 1.0 degree step for continuous movement
         }, interval);
     };
 
     const startMoveLeft = () => {
         // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
         if (continuousMoveInterval.current || (connectionMode === 'ascom' && !isTracking)) return;
-        moveLeft();
+        moveLeft(1.0); // 1.0 degree step for continuous movement
         // Use slower interval for ASCOM (2 seconds), faster for simulation (100ms)
         const interval = connectionMode === 'ascom' ? 2000 : 100;
         continuousMoveInterval.current = setInterval(() => {
-            moveLeft();
+            moveLeft(1.0); // 1.0 degree step for continuous movement
         }, interval);
     };
 
     const startMoveRight = () => {
         // In ASCOM mode, require tracking. In simulation mode, allow movement anytime.
         if (continuousMoveInterval.current || (connectionMode === 'ascom' && !isTracking)) return;
-        moveRight();
+        moveRight(1.0); // 1.0 degree step for continuous movement
         // Use slower interval for ASCOM (2 seconds), faster for simulation (100ms)
         const interval = connectionMode === 'ascom' ? 2000 : 100;
         continuousMoveInterval.current = setInterval(() => {
-            moveRight();
+            moveRight(1.0); // 1.0 degree step for continuous movement
         }, interval);
     };
 

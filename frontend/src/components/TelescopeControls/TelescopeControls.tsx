@@ -7,11 +7,15 @@ import { useState } from 'react'
 import { hmsToDegrees, dmsToDegrees } from '@/utils/coordinateUtils'
 
 export default function TelescopeControls() {
-    const { startMoveUp, startMoveDown, startMoveLeft, startMoveRight, stopMove, toggleTracking, isTracking, gotoCoordinates, connectionMode } = useTelescopeContext();
+    const { moveUp, moveDown, moveLeft, moveRight, startMoveUp, startMoveDown, startMoveLeft, startMoveRight, stopMove, toggleTracking, isTracking, gotoCoordinates, connectionMode } = useTelescopeContext();
     const [showGotoPanel, setShowGotoPanel] = useState(false);
     const [raInput, setRaInput] = useState('');
     const [decInput, setDecInput] = useState('');
     const [error, setError] = useState('');
+
+    // Track if button is being held (for differentiating single click vs hold)
+    const holdTimerRef = useState<any>(null);
+    const isHoldingRef = useState(false);
 
     const handleGotoSubmit = () => {
         try {
@@ -29,6 +33,36 @@ export default function TelescopeControls() {
         }
     };
 
+    // Handler for when button is pressed down
+    const handleMoveStart = (startMoveFn: () => void) => {
+        isHoldingRef[1](false);
+        // Set a timer - if button is held for more than 200ms, it's a hold
+        const timer = setTimeout(() => {
+            isHoldingRef[1](true);
+            startMoveFn(); // Start continuous movement
+        }, 200);
+        holdTimerRef[1](timer);
+    };
+
+    // Handler for when button is released
+    const handleMoveEnd = (singleMoveFn: () => void) => {
+        // Clear the hold timer
+        if (holdTimerRef[0]) {
+            clearTimeout(holdTimerRef[0]);
+            holdTimerRef[1](null);
+        }
+
+        // If it was a hold, stop the continuous movement
+        if (isHoldingRef[0]) {
+            stopMove();
+        } else {
+            // It was a quick click - do a single small move
+            singleMoveFn();
+        }
+
+        isHoldingRef[1](false);
+    };
+
     // In ASCOM mode, buttons are disabled when not tracking
     // In simulation mode, buttons are always enabled
     const buttonsDisabled = connectionMode === 'ascom' && !isTracking;
@@ -39,11 +73,11 @@ export default function TelescopeControls() {
             <Button
                 className={`telescope-controls__panel telescope-controls__left ${buttonsDisabled ? 'disabled' : ''}`}
                 borderRadius="3px"
-                onMouseDown={startMoveLeft}
-                onMouseUp={stopMove}
-                onMouseLeave={stopMove}
-                onTouchStart={startMoveLeft}
-                onTouchEnd={stopMove}
+                onMouseDown={() => handleMoveStart(startMoveLeft)}
+                onMouseUp={() => handleMoveEnd(() => moveLeft(0.25))}
+                onMouseLeave={() => handleMoveEnd(() => {})}
+                onTouchStart={() => handleMoveStart(startMoveLeft)}
+                onTouchEnd={() => handleMoveEnd(() => moveLeft(0.25))}
                 disabled={buttonsDisabled}
             >
                 <ArrowBigLeft size={30} color={buttonsDisabled ? "#888888" : "#ffffff"} />
@@ -51,11 +85,11 @@ export default function TelescopeControls() {
             <Button
                 className={`telescope-controls__panel telescope-controls__up ${buttonsDisabled ? 'disabled' : ''}`}
                 borderRadius="3px"
-                onMouseDown={startMoveUp}
-                onMouseUp={stopMove}
-                onMouseLeave={stopMove}
-                onTouchStart={startMoveUp}
-                onTouchEnd={stopMove}
+                onMouseDown={() => handleMoveStart(startMoveUp)}
+                onMouseUp={() => handleMoveEnd(() => moveUp(0.25))}
+                onMouseLeave={() => handleMoveEnd(() => {})}
+                onTouchStart={() => handleMoveStart(startMoveUp)}
+                onTouchEnd={() => handleMoveEnd(() => moveUp(0.25))}
                 disabled={buttonsDisabled}
             >
                 <ArrowBigUp size={30} color={buttonsDisabled ? "#888888" : "#ffffff"} />
@@ -70,11 +104,11 @@ export default function TelescopeControls() {
             <Button
                 className={`telescope-controls__panel telescope-controls__down ${buttonsDisabled ? 'disabled' : ''}`}
                 borderRadius="3px"
-                onMouseDown={startMoveDown}
-                onMouseUp={stopMove}
-                onMouseLeave={stopMove}
-                onTouchStart={startMoveDown}
-                onTouchEnd={stopMove}
+                onMouseDown={() => handleMoveStart(startMoveDown)}
+                onMouseUp={() => handleMoveEnd(() => moveDown(0.25))}
+                onMouseLeave={() => handleMoveEnd(() => {})}
+                onTouchStart={() => handleMoveStart(startMoveDown)}
+                onTouchEnd={() => handleMoveEnd(() => moveDown(0.25))}
                 disabled={buttonsDisabled}
             >
                 <ArrowBigDown size={30} color={buttonsDisabled ? "#888888" : "#ffffff"} />
@@ -82,11 +116,11 @@ export default function TelescopeControls() {
             <Button
                 className={`telescope-controls__panel telescope-controls__right ${buttonsDisabled ? 'disabled' : ''}`}
                 borderRadius="3px"
-                onMouseDown={startMoveRight}
-                onMouseUp={stopMove}
-                onMouseLeave={stopMove}
-                onTouchStart={startMoveRight}
-                onTouchEnd={stopMove}
+                onMouseDown={() => handleMoveStart(startMoveRight)}
+                onMouseUp={() => handleMoveEnd(() => moveRight(0.25))}
+                onMouseLeave={() => handleMoveEnd(() => {})}
+                onTouchStart={() => handleMoveStart(startMoveRight)}
+                onTouchEnd={() => handleMoveEnd(() => moveRight(0.25))}
                 disabled={buttonsDisabled}
             >
                 <ArrowBigRight size={30} color={buttonsDisabled ? "#888888" : "#ffffff"} />
