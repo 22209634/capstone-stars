@@ -5,9 +5,6 @@ import { useVisibleObjects } from '../../hooks/useVisibleObjects';
 
 export default function SkyObjectList() {
     const { objects, loading, error } = useVisibleObjects();
-    
-    // Get only first 20 objects
-    const displayObjects = objects.slice(0, 10);
 
     if (loading) {
         return (
@@ -24,6 +21,9 @@ export default function SkyObjectList() {
             </Panel>
         );
     }
+
+    // Get only first 10 objects (after loading/error checks)
+    const displayObjects = objects?.slice(0, 10) || [];
 
     if (displayObjects.length === 0) {
         return (

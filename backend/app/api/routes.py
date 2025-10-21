@@ -3,7 +3,7 @@ from typing import Optional
 from pydantic import BaseModel
 from app.services.simbad import visible_objects_bundoora
 from app.services.weather_data import get_weather_status
-from app.services.ascom_alpaca import ascom_client
+from app.services.ascom_alpaca import ascom_client, ascom_camera_client
 
 router = APIRouter(prefix="/api", tags=["telescope"])
 
@@ -177,3 +177,69 @@ async def abort_slew():
             raise HTTPException(status_code=500, detail="Failed to abort slew")
     except Exception as e:
         return {"success": False, "message": str(e)}
+
+
+# ASCOM Alpaca camera endpoints
+@router.get("/camera/discover")
+async def discover_ascom_cameras():
+    """
+    Discover ASCOM Alpaca cameras on the local network.
+    """
+    try:
+        cameras = await ascom_camera_client.discover_cameras(timeout=5)
+        camera_list = [camera.to_dict() for camera in cameras]
+        return {"success": True, "data": camera_list}
+    except Exception as e:
+        return {"success": False, "error": str(e), "data": []}
+
+
+@router.post("/camera/connect-ascom")
+async def connect_to_ascom_camera(request: AscomConnectionRequest):
+    """
+    Connect to a specific ASCOM Alpaca camera.
+    """
+    try:
+        from app.services.ascom_alpaca import AscomDevice
+
+        camera = AscomDevice(
+            device_name=request.deviceId,
+            device_type="Camera",
+            device_number=request.deviceNumber,
+            unique_id=request.deviceId,
+            ip_address=request.ipAddress,
+            port=request.port
+        )
+
+        success = await ascom_camera_client.connect(camera)
+
+        if success:
+            return {"success": True, "message": "Connected to camera successfully"}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to connect to camera")
+
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+
+@router.post("/camera/disconnect-ascom")
+async def disconnect_ascom_camera():
+    """
+    Disconnect from the current ASCOM Alpaca camera.
+    """
+    try:
+        await ascom_camera_client.disconnect()
+        return {"success": True, "message": "Disconnected from camera successfully"}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+
+@router.get("/camera/status")
+async def get_camera_status():
+    """
+    Get current camera status (ASCOM Alpaca).
+    """
+    try:
+        status = await ascom_camera_client.get_status()
+        return {"success": True, "data": status}
+    except Exception as e:
+        return {"success": False, "error": str(e)}

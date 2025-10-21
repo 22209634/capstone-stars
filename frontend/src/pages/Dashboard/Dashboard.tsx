@@ -9,6 +9,7 @@ import TelescopeStatus from "@/components/TelescopeStatus/TelescopeStatus.tsx";
 import TelescopeControls from "@/components/TelescopeControls/TelescopeControls.tsx";
 import CollapsiblePanel from "@/components/CollapsiblePanel/CollapsiblePanel.tsx";
 import { TelescopeProvider, useTelescopeContext } from "@/contexts/TelescopeContext";
+import { CameraProvider } from "@/contexts/CameraContext";
 
 function DashboardContent() {
     const { connectionMode } = useTelescopeContext();
@@ -64,7 +65,9 @@ function DashboardContent() {
 export default function Dashboard() {
     return (
         <TelescopeProvider>
-            <DashboardContent />
+            <CameraProvider>
+                <DashboardContent />
+            </CameraProvider>
         </TelescopeProvider>
     );
 }
