@@ -243,3 +243,26 @@ async def get_camera_status():
         return {"success": True, "data": status}
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+@router.get("/camera/capture")
+async def capture_camera_image(exposure: float = Query(0.1, description="Exposure time in seconds")):
+    """
+    Capture a single image from the camera.
+    Returns the image as JPEG bytes.
+    """
+    try:
+        from fastapi.responses import Response
+
+        image_data = await ascom_camera_client.capture_image(exposure=exposure)
+
+        if image_data:
+            return Response(content=image_data, media_type="image/jpeg")
+        else:
+            raise HTTPException(status_code=500, detail="Failed to capture image")
+
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error capturing image: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

@@ -419,6 +419,11 @@ class AscomCameraClient:
                 if resp.status == 200:
                     result = await resp.json()
                     logger.info(f"Connected to camera {device.device_name}: {result}")
+
+                    # Configure full frame settings after connection
+                    if not await self.setup_full_frame():
+                        logger.warning("Failed to setup full frame, but connection succeeded")
+
                     return True
                 else:
                     error_text = await resp.text()
@@ -515,6 +520,222 @@ class AscomCameraClient:
         except Exception as e:
             logger.error(f"Error getting camera status: {e}")
             raise
+
+    async def setup_full_frame(self) -> bool:
+        """Configure camera to use the full frame for imaging."""
+        if not self.session or not self.base_url:
+            raise Exception("Not connected to camera")
+
+        try:
+            # Get camera dimensions
+            async with self.session.get(f"{self.base_url}/cameraxsize") as resp:
+                if resp.status == 200:
+                    result = await resp.json()
+                    camera_width = result.get('Value', 0)
+                else:
+                    return False
+
+            async with self.session.get(f"{self.base_url}/cameraysize") as resp:
+                if resp.status == 200:
+                    result = await resp.json()
+                    camera_height = result.get('Value', 0)
+                else:
+                    return False
+
+            logger.info(f"Camera dimensions: {camera_width}x{camera_height}")
+
+            # Set full frame parameters
+            # StartX and StartY (0-based origin)
+            form_data = aiohttp.FormData()
+            form_data.add_field('StartX', '0')
+            form_data.add_field('ClientID', '1')
+            form_data.add_field('ClientTransactionID', '1')
+            async with self.session.put(f"{self.base_url}/startx", data=form_data) as resp:
+                if resp.status != 200:
+                    return False
+
+            form_data = aiohttp.FormData()
+            form_data.add_field('StartY', '0')
+            form_data.add_field('ClientID', '1')
+            form_data.add_field('ClientTransactionID', '1')
+            async with self.session.put(f"{self.base_url}/starty", data=form_data) as resp:
+                if resp.status != 200:
+                    return False
+
+            # NumX and NumY (full dimensions)
+            form_data = aiohttp.FormData()
+            form_data.add_field('NumX', str(camera_width))
+            form_data.add_field('ClientID', '1')
+            form_data.add_field('ClientTransactionID', '1')
+            async with self.session.put(f"{self.base_url}/numx", data=form_data) as resp:
+                if resp.status != 200:
+                    return False
+
+            form_data = aiohttp.FormData()
+            form_data.add_field('NumY', str(camera_height))
+            form_data.add_field('ClientID', '1')
+            form_data.add_field('ClientTransactionID', '1')
+            async with self.session.put(f"{self.base_url}/numy", data=form_data) as resp:
+                if resp.status != 200:
+                    return False
+
+            logger.info(f"Set full frame: StartX=0, StartY=0, NumX={camera_width}, NumY={camera_height}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Error setting up full frame: {e}")
+            return False
+
+    async def start_exposure(self, duration: float = 0.1, light: bool = True) -> bool:
+        """
+        Start a camera exposure.
+
+        Args:
+            duration: Exposure duration in seconds (default 0.1s for fast captures)
+            light: True for light frame, False for dark frame
+
+        Returns:
+            True if exposure started successfully
+        """
+        if not self.session or not self.base_url:
+            raise Exception("Not connected to camera")
+
+        try:
+            form_data = aiohttp.FormData()
+            form_data.add_field('Duration', str(duration))
+            form_data.add_field('Light', 'true' if light else 'false')
+            form_data.add_field('ClientID', '1')
+            form_data.add_field('ClientTransactionID', '1')
+
+            async with self.session.put(
+                f"{self.base_url}/startexposure",
+                data=form_data
+            ) as resp:
+                if resp.status == 200:
+                    result = await resp.json()
+                    if result.get('ErrorNumber', 0) == 0:
+                        logger.debug(f"Started exposure: {duration}s")
+                        return True
+                    else:
+                        logger.error(f"ASCOM error starting exposure: {result.get('ErrorMessage')}")
+                        return False
+                return False
+
+        except Exception as e:
+            logger.error(f"Error starting exposure: {e}")
+            return False
+
+    async def get_image_ready(self) -> bool:
+        """Check if an image is ready to download."""
+        if not self.session or not self.base_url:
+            raise Exception("Not connected to camera")
+
+        try:
+            async with self.session.get(f"{self.base_url}/imageready") as resp:
+                if resp.status == 200:
+                    result = await resp.json()
+                    return result.get('Value', False)
+                return False
+        except Exception as e:
+            logger.error(f"Error checking image ready: {e}")
+            return False
+
+    async def get_image_array(self) -> Optional[bytes]:
+        """
+        Get the image array from the camera and convert to JPEG bytes.
+
+        Returns:
+            JPEG image as bytes, or None if failed
+        """
+        if not self.session or not self.base_url:
+            raise Exception("Not connected to camera")
+
+        try:
+            async with self.session.get(f"{self.base_url}/imagearray") as resp:
+                if resp.status == 200:
+                    result = await resp.json()
+                    image_array = result.get('Value')
+
+                    if image_array:
+                        # Convert ASCOM image array to numpy array and then to JPEG
+                        import numpy as np
+                        from PIL import Image
+                        import io
+
+                        # ASCOM returns a 2D or 3D array
+                        img_array = np.array(image_array, dtype=np.float32)
+
+                        logger.info(f"Original image array shape: {img_array.shape}")
+                        logger.info(f"Image array min: {img_array.min()}, max: {img_array.max()}")
+
+                        # Note: Different ASCOM cameras may return arrays in different orientations
+                        # The Sky Simulator appears to return arrays in the correct [row][col] format already
+                        # So we DON'T transpose here - uncomment the transpose section if image is rotated
+
+                        # Normalize to 0-255 range
+                        if img_array.max() > 0:
+                            img_array = ((img_array - img_array.min()) / (img_array.max() - img_array.min()) * 255)
+
+                        img_array = img_array.astype(np.uint8)
+
+                        # Convert to PIL Image
+                        if len(img_array.shape) == 2:
+                            # Grayscale image
+                            img = Image.fromarray(img_array, mode='L')
+                        else:
+                            # Color image (3D array: height x width x channels)
+                            img = Image.fromarray(img_array, mode='RGB')
+
+                        logger.info(f"PIL Image size: {img.size} (width x height)")
+
+                        # Convert to JPEG bytes
+                        img_byte_arr = io.BytesIO()
+                        img.save(img_byte_arr, format='JPEG', quality=85)
+                        img_byte_arr.seek(0)
+
+                        return img_byte_arr.getvalue()
+
+                return None
+
+        except Exception as e:
+            logger.error(f"Error getting image array: {e}")
+            return None
+
+    async def capture_image(self, exposure: float = 0.1) -> Optional[bytes]:
+        """
+        Capture a single image with the specified exposure time.
+
+        Args:
+            exposure: Exposure time in seconds
+
+        Returns:
+            JPEG image as bytes, or None if failed
+        """
+        try:
+            # Start exposure
+            if not await self.start_exposure(exposure):
+                logger.error("Failed to start exposure")
+                return None
+
+            # Wait for exposure to complete, checking image ready status
+            max_wait = exposure + 5  # Add 5 seconds buffer
+            wait_time = 0
+            check_interval = 0.1
+
+            while wait_time < max_wait:
+                if await self.get_image_ready():
+                    # Image is ready, download it
+                    return await self.get_image_array()
+
+                await asyncio.sleep(check_interval)
+                wait_time += check_interval
+
+            logger.error("Timeout waiting for image")
+            return None
+
+        except Exception as e:
+            logger.error(f"Error capturing image: {e}")
+            return None
 
 
 # Global client instances

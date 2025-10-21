@@ -144,7 +144,7 @@ export default function TelescopeView() {
             // Only update coordinates from simulation in simulation mode
             if (aladinInstance.current) {
                 const currentRaDec = aladinInstance.current.getRaDec();
-                console.log('[TelescopeView] Setting coordinates from simulation:', currentRaDec[0], currentRaDec[1]);
+                //console.log('[TelescopeView] Setting coordinates from simulation:', currentRaDec[0], currentRaDec[1]);
                 setCoordinates(currentRaDec[0], currentRaDec[1]);
             }
         }, 100);  // Update every 100ms

@@ -6,12 +6,15 @@ import TelescopeConnectionModal from '@/components/TelescopeConnectionModal/Tele
 import { Camera, Telescope, Wifi } from 'lucide-react'
 import { useState } from 'react'
 import { useTelescopeContext } from '@/contexts/TelescopeContext'
+import { useCameraContext } from '@/contexts/CameraContext'
 import telescopeAPI, { type AscomDevice } from '@/services/telescopeAPI'
+import cameraAPI from '@/services/cameraAPI'
 
 export default function Topbar() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isConnecting, setIsConnecting] = useState(false);
     const { connectionMode, setConnectionMode, connectedDevice, setConnectedDevice } = useTelescopeContext();
+    const { setCameraConnected, setConnectedCamera } = useCameraContext();
 
     const handleConnect = async (device: AscomDevice) => {
         setIsConnecting(true);
@@ -39,9 +42,20 @@ export default function Topbar() {
 
     const handleDisconnect = async () => {
         try {
+            // Disconnect from telescope
             await telescopeAPI.disconnectAscom();
             setConnectionMode('simulation');
             setConnectedDevice(null);
+
+            // Also disconnect from camera if connected
+            try {
+                await cameraAPI.disconnectAscomCamera();
+                setCameraConnected(false);
+                setConnectedCamera(null);
+                console.log('Disconnected from camera');
+            } catch (cameraError) {
+                console.error('Error disconnecting camera:', cameraError);
+            }
         } catch (error) {
             console.error('Disconnect error:', error);
         }
