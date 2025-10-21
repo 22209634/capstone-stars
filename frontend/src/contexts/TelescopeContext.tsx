@@ -362,22 +362,23 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
     useEffect(() => {
         if (connectionMode !== 'ascom') return;
 
-        // Enable tracking when connecting to ASCOM telescope
-        const enableTracking = async () => {
+        // Read initial tracking state from telescope
+        const readInitialState = async () => {
             try {
-                console.log('[ASCOM] Enabling tracking on telescope');
-                const response = await telescopeAPI.setTracking(true);
-                if (response.success) {
-                    console.log('[ASCOM] Tracking enabled successfully');
-                } else {
-                    console.warn('[ASCOM] Failed to enable tracking:', response.message);
+                console.log('[ASCOM] Reading initial telescope state');
+                const response = await telescopeAPI.getTelescopeStatus();
+                if (response.success && response.data) {
+                    console.log('[ASCOM] Initial tracking state:', response.data.tracking);
+                    setIsTracking(response.data.tracking);
+                    setCoordinates(response.data.rightAscension, response.data.declination);
+                    setStatus(response.data.slewing ? 'Slewing' : response.data.tracking ? 'Tracking' : 'Idle');
                 }
             } catch (error) {
-                console.error('[ASCOM] Error enabling tracking:', error);
+                console.error('[ASCOM] Error reading initial state:', error);
             }
         };
 
-        enableTracking();
+        readInitialState();
 
         const pollInterval = setInterval(async () => {
             try {
@@ -385,6 +386,7 @@ export const TelescopeProvider: React.FC<TelescopeProviderProps> = ({ children }
                 if (response.success && response.data) {
                     //console.log('[ASCOM Poll] Setting coordinates from ASCOM:', response.data.rightAscension, response.data.declination, 'Slewing:', response.data.slewing, 'Tracking:', response.data.tracking);
                     setCoordinates(response.data.rightAscension, response.data.declination);
+                    setIsTracking(response.data.tracking);
                     setStatus(response.data.slewing ? 'Slewing' : response.data.tracking ? 'Tracking' : 'Idle');
                 }
             } catch (error) {
