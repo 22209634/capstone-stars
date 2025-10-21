@@ -4,10 +4,10 @@ import { useTelescopeContext } from '@/contexts/TelescopeContext';
 
 export default function TelescopeView() {
     const aladinDiv = useRef<HTMLDivElement>(null);
-    const aladinInstance = useRef<any>(null);
+    const aladinInstance = useRef<AladinInstance | null>(null);
     const [isLoaded, setIsLoaded] = useState(false);
-    const rotationInterval = useRef<any>(null); // Rotation
-    const coordinateUpdateInterval = useRef<any>(null); // Coordinate updates
+    const rotationInterval = useRef<NodeJS.Timeout | null>(null); // Rotation
+    const coordinateUpdateInterval = useRef<NodeJS.Timeout | null>(null); // Coordinate updates
     const telescopeContext = useTelescopeContext();
     const { setAladinInstance, setCoordinates, connectionMode } = telescopeContext;
 
@@ -33,7 +33,7 @@ export default function TelescopeView() {
                 // Wait for A.init to be ready
                 window.A.init.then(() => {
                     // Initialise Aladin
-                    aladinInstance.current = (window as any).A.aladin(aladinDiv.current, {
+                    aladinInstance.current = window.A.aladin(aladinDiv.current, {
                         survey: 'P/DSS2/color',
                         fov: 2,
                         target: '0 +0',
@@ -121,7 +121,7 @@ export default function TelescopeView() {
 
                 aladinInstance.current.gotoRaDec(newRa, currentRaDec[1]);
             }
-        }, 42) as any;  // Update every 42/1000 seconds
+        }, 42);  // Update every 42/1000 seconds
     };
 
     const startCoordinateUpdates = () => {
@@ -147,7 +147,7 @@ export default function TelescopeView() {
                 console.log('[TelescopeView] Setting coordinates from simulation:', currentRaDec[0], currentRaDec[1]);
                 setCoordinates(currentRaDec[0], currentRaDec[1]);
             }
-        }, 100) as any;  // Update every 100ms
+        }, 100);  // Update every 100ms
     };
 
     // Stop intervals IMMEDIATELY when switching to ASCOM mode
