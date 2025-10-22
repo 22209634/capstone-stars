@@ -154,8 +154,17 @@ class UsbCameraService:
         try:
             import cv2
 
-            # Test that camera can be opened
-            cap = cv2.VideoCapture(camera_id)
+            # Test that camera can be opened with DirectShow on Windows
+            system = platform.system()
+            if system == "Windows":
+                cap = cv2.VideoCapture(camera_id, cv2.CAP_DSHOW)
+            elif system == "Linux":
+                cap = cv2.VideoCapture(camera_id, cv2.CAP_V4L2)
+            elif system == "Darwin":
+                cap = cv2.VideoCapture(camera_id, cv2.CAP_AVFOUNDATION)
+            else:
+                cap = cv2.VideoCapture(camera_id)
+
             if cap.isOpened():
                 cap.release()
                 self.connected_camera_id = camera_id
@@ -204,7 +213,17 @@ class UsbCameraService:
             import cv2
             import numpy as np
 
-            cap = cv2.VideoCapture(target_id)
+            # Use the appropriate backend for the platform
+            system = platform.system()
+            if system == "Windows":
+                cap = cv2.VideoCapture(target_id, cv2.CAP_DSHOW)
+            elif system == "Linux":
+                cap = cv2.VideoCapture(target_id, cv2.CAP_V4L2)
+            elif system == "Darwin":
+                cap = cv2.VideoCapture(target_id, cv2.CAP_AVFOUNDATION)
+            else:
+                cap = cv2.VideoCapture(target_id)
+
             if not cap.isOpened():
                 logger.error(f"Failed to open camera {target_id}")
                 return None

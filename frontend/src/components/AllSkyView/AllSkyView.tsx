@@ -9,7 +9,6 @@ import { Camera, X } from 'lucide-react';
 export default function AllSkyView() {
     const [modalOpen, setModalOpen] = useState(false);
     const [frameUrl, setFrameUrl] = useState<string | null>(null);
-    const [refreshKey, setRefreshKey] = useState(0);
 
     const {
         cameraConnected,
@@ -35,32 +34,22 @@ export default function AllSkyView() {
     'fov=60&' +
     'format=png';
 
-    // Auto-refresh camera feed for USB and ASCOM cameras
+    // Set up camera feed URL based on camera type
     useEffect(() => {
-        if (!cameraConnected || !connectedCameraType) return;
+        if (!cameraConnected || !connectedCameraType) {
+            setFrameUrl(null);
+            return;
+        }
 
         if (connectedCameraType === 'ip' && streamUrl) {
             // For IP cameras, use the stream URL directly
             setFrameUrl(streamUrl);
-            return;
-        }
-
-        if (connectedCameraType === 'usb' || connectedCameraType === 'ascom') {
-            // Poll for frames from USB/ASCOM cameras
-            const interval = setInterval(() => {
-                setRefreshKey(prev => prev + 1);
-            }, 1000); // Refresh every 1 second
-
-            return () => clearInterval(interval);
+        } else if (connectedCameraType === 'usb' || connectedCameraType === 'ascom') {
+            // For USB/ASCOM cameras, use MJPEG streaming endpoint
+            const url = allSkyCameraAPI.getStreamUrl(connectedCameraType);
+            setFrameUrl(url);
         }
     }, [cameraConnected, connectedCameraType, streamUrl]);
-
-    useEffect(() => {
-        if (cameraConnected && (connectedCameraType === 'usb' || connectedCameraType === 'ascom')) {
-            const url = allSkyCameraAPI.getFrameUrl(connectedCameraType);
-            setFrameUrl(`${url}&t=${Date.now()}`);
-        }
-    }, [refreshKey, cameraConnected, connectedCameraType]);
 
     const handleDisconnect = async () => {
         if (!connectedCameraType) return;

@@ -100,6 +100,10 @@ class AllSkyCameraAPI {
   getFrameUrl(cameraType: 'ascom' | 'usb' | 'ip'): string {
     return `${this.baseURL}/allsky-camera/frame?camera_type=${cameraType}`;
   }
+
+  getStreamUrl(cameraType: 'ascom' | 'usb'): string {
+    return `${this.baseURL}/allsky-camera/stream?camera_type=${cameraType}`;
+  }
 }
 
 const allSkyCameraAPI = new AllSkyCameraAPI();

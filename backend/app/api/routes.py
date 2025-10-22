@@ -423,14 +423,30 @@ async def get_allsky_camera_frame(camera_type: str = Query(..., description="Typ
         if camera_type == "usb":
             image_data = usb_camera_service.capture_frame()
             if image_data:
-                return Response(content=image_data, media_type="image/jpeg")
+                return Response(
+                    content=image_data,
+                    media_type="image/jpeg",
+                    headers={
+                        "Cache-Control": "no-cache, no-store, must-revalidate",
+                        "Pragma": "no-cache",
+                        "Expires": "0"
+                    }
+                )
             else:
                 raise HTTPException(status_code=500, detail="Failed to capture USB camera frame")
 
         elif camera_type == "ascom":
             image_data = await ascom_camera_client.capture_image(exposure=0.1)
             if image_data:
-                return Response(content=image_data, media_type="image/jpeg")
+                return Response(
+                    content=image_data,
+                    media_type="image/jpeg",
+                    headers={
+                        "Cache-Control": "no-cache, no-store, must-revalidate",
+                        "Pragma": "no-cache",
+                        "Expires": "0"
+                    }
+                )
             else:
                 raise HTTPException(status_code=500, detail="Failed to capture ASCOM camera frame")
 
@@ -447,3 +463,55 @@ async def get_allsky_camera_frame(camera_type: str = Query(..., description="Typ
         logger = logging.getLogger(__name__)
         logger.error(f"Error capturing all-sky frame: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/allsky-camera/stream")
+async def stream_allsky_camera(camera_type: str = Query(..., description="Type of camera: usb or ascom")):
+    """
+    Stream MJPEG video from the all-sky camera (USB or ASCOM).
+    """
+    if camera_type not in ["usb", "ascom"]:
+        raise HTTPException(status_code=400, detail="Only USB and ASCOM cameras support streaming")
+
+    from fastapi.responses import StreamingResponse
+    import asyncio
+
+    async def generate_frames():
+        """Generator that yields MJPEG frames."""
+        while True:
+            try:
+                if camera_type == "usb":
+                    frame_data = usb_camera_service.capture_frame()
+                elif camera_type == "ascom":
+                    frame_data = await ascom_camera_client.capture_image(exposure=0.1)
+                else:
+                    break
+
+                if frame_data:
+                    # MJPEG format: each frame is separated by a boundary
+                    yield (b'--frame\r\n'
+                           b'Content-Type: image/jpeg\r\n\r\n' + frame_data + b'\r\n')
+                else:
+                    # If frame capture fails, wait and retry
+                    await asyncio.sleep(0.1)
+
+                # Control frame rate (approx 10 FPS)
+                await asyncio.sleep(0.1)
+
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Error generating frame: {e}")
+                await asyncio.sleep(0.5)
+                # Continue trying
+
+    return StreamingResponse(
+        generate_frames(),
+        media_type="multipart/x-mixed-replace; boundary=frame",
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+            "Connection": "close"
+        }
+    )

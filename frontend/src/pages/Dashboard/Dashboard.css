@@ -40,6 +40,11 @@
     width: 25%;
 }
 
+.allsky-view {
+    min-height: 300px;
+    height: 400px;
+}
+
 .telescope-status, .telescope-controls {
     width: 70%;
     margin-left: auto;

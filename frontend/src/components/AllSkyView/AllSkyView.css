@@ -66,11 +66,7 @@
 }
 
 .camera-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    padding: 12px;
+    padding: 0 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
