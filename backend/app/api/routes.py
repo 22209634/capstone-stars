@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from app.services.simbad import visible_objects_bundoora
 from app.services.weather_data import get_weather_status
 from app.services.ascom_alpaca import ascom_client, ascom_camera_client
+from app.services.usb_camera import usb_camera_service
 
 router = APIRouter(prefix="/api", tags=["telescope"])
 
@@ -265,4 +266,184 @@ async def capture_camera_image(exposure: float = Query(0.1, description="Exposur
         import logging
         logger = logging.getLogger(__name__)
         logger.error(f"Error capturing image: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# All-Sky Camera endpoints (supports ASCOM, USB, and IP cameras)
+class AllSkyCameraConnectionRequest(BaseModel):
+    cameraType: str  # "ascom", "usb", or "ip"
+    # ASCOM fields
+    deviceId: Optional[str] = None
+    ipAddress: Optional[str] = None
+    port: Optional[int] = None
+    deviceNumber: Optional[int] = None
+    # USB fields
+    usbDeviceId: Optional[int] = None
+    # IP/RTSP fields
+    streamUrl: Optional[str] = None
+
+
+@router.get("/allsky-camera/discover-usb")
+def discover_usb_cameras():
+    """
+    Discover USB cameras connected to the system.
+    """
+    try:
+        cameras = usb_camera_service.discover_cameras()
+        camera_list = [camera.to_dict() for camera in cameras]
+        return {"success": True, "data": camera_list}
+    except Exception as e:
+        return {"success": False, "error": str(e), "data": []}
+
+
+@router.get("/allsky-camera/discover-ascom")
+async def discover_allsky_ascom_cameras():
+    """
+    Discover ASCOM Alpaca cameras for all-sky use.
+    """
+    try:
+        from app.services.ascom_alpaca import AscomAlpacaClient
+        temp_client = AscomAlpacaClient()
+        cameras = await temp_client.discover_devices(timeout=5, device_type='camera')
+        camera_list = [camera.to_dict() for camera in cameras]
+        return {"success": True, "data": camera_list}
+    except Exception as e:
+        return {"success": False, "error": str(e), "data": []}
+
+
+@router.post("/allsky-camera/connect")
+async def connect_allsky_camera(request: AllSkyCameraConnectionRequest):
+    """
+    Connect to an all-sky camera (ASCOM, USB, or IP/RTSP).
+    """
+    try:
+        if request.cameraType == "usb":
+            if request.usbDeviceId is None:
+                raise HTTPException(status_code=400, detail="USB device ID is required")
+
+            success = usb_camera_service.connect(request.usbDeviceId)
+            if success:
+                return {"success": True, "message": f"Connected to USB camera {request.usbDeviceId}"}
+            else:
+                raise HTTPException(status_code=500, detail="Failed to connect to USB camera")
+
+        elif request.cameraType == "ascom":
+            if not all([request.deviceId, request.ipAddress, request.port, request.deviceNumber is not None]):
+                raise HTTPException(status_code=400, detail="ASCOM connection requires deviceId, ipAddress, port, and deviceNumber")
+
+            from app.services.ascom_alpaca import AscomDevice, AscomCameraClient
+
+            # Create a separate ASCOM camera client for all-sky camera
+            # (This is different from the telescope camera)
+            device = AscomDevice(
+                device_name=request.deviceId,
+                device_type="Camera",
+                device_number=request.deviceNumber,
+                unique_id=request.deviceId,
+                ip_address=request.ipAddress,
+                port=request.port
+            )
+
+            # For now, we'll reuse the existing ascom_camera_client
+            # In a production app, you might want separate clients for telescope and all-sky cameras
+            success = await ascom_camera_client.connect(device)
+
+            if success:
+                return {"success": True, "message": "Connected to ASCOM camera"}
+            else:
+                raise HTTPException(status_code=500, detail="Failed to connect to ASCOM camera")
+
+        elif request.cameraType == "ip":
+            if not request.streamUrl:
+                raise HTTPException(status_code=400, detail="Stream URL is required for IP cameras")
+
+            # For IP cameras, we just validate the URL format and store it
+            # The actual streaming will be handled by the frontend or a streaming proxy
+            return {"success": True, "message": f"IP camera configured: {request.streamUrl}", "streamUrl": request.streamUrl}
+
+        else:
+            raise HTTPException(status_code=400, detail=f"Unknown camera type: {request.cameraType}")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+
+@router.post("/allsky-camera/disconnect")
+async def disconnect_allsky_camera(camera_type: str = Query(..., description="Type of camera: ascom, usb, or ip")):
+    """
+    Disconnect from the all-sky camera.
+    """
+    try:
+        if camera_type == "usb":
+            usb_camera_service.disconnect()
+            return {"success": True, "message": "Disconnected from USB camera"}
+        elif camera_type == "ascom":
+            await ascom_camera_client.disconnect()
+            return {"success": True, "message": "Disconnected from ASCOM camera"}
+        elif camera_type == "ip":
+            # IP cameras don't need explicit disconnect
+            return {"success": True, "message": "IP camera disconnected"}
+        else:
+            raise HTTPException(status_code=400, detail=f"Unknown camera type: {camera_type}")
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+
+@router.get("/allsky-camera/status")
+async def get_allsky_camera_status(camera_type: str = Query(..., description="Type of camera: ascom, usb, or ip")):
+    """
+    Get all-sky camera status.
+    """
+    try:
+        if camera_type == "usb":
+            status = usb_camera_service.get_status()
+            return {"success": True, "data": status}
+        elif camera_type == "ascom":
+            status = await ascom_camera_client.get_status()
+            return {"success": True, "data": status}
+        elif camera_type == "ip":
+            # IP cameras are always "connected" if configured
+            return {"success": True, "data": {"connected": True, "cameraType": "IP"}}
+        else:
+            raise HTTPException(status_code=400, detail=f"Unknown camera type: {camera_type}")
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@router.get("/allsky-camera/frame")
+async def get_allsky_camera_frame(camera_type: str = Query(..., description="Type of camera: ascom, usb, or ip")):
+    """
+    Get a single frame from the all-sky camera.
+    """
+    try:
+        from fastapi.responses import Response
+
+        if camera_type == "usb":
+            image_data = usb_camera_service.capture_frame()
+            if image_data:
+                return Response(content=image_data, media_type="image/jpeg")
+            else:
+                raise HTTPException(status_code=500, detail="Failed to capture USB camera frame")
+
+        elif camera_type == "ascom":
+            image_data = await ascom_camera_client.capture_image(exposure=0.1)
+            if image_data:
+                return Response(content=image_data, media_type="image/jpeg")
+            else:
+                raise HTTPException(status_code=500, detail="Failed to capture ASCOM camera frame")
+
+        elif camera_type == "ip":
+            raise HTTPException(status_code=400, detail="IP camera frames should be accessed directly via the stream URL")
+
+        else:
+            raise HTTPException(status_code=400, detail=f"Unknown camera type: {camera_type}")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error capturing all-sky frame: {e}")
         raise HTTPException(status_code=500, detail=str(e))

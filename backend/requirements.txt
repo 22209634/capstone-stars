@@ -12,3 +12,4 @@ aiohttp==3.13.1
 # Image processing
 Pillow==11.1.0
 numpy==2.2.2
+opencv-python==4.10.0.84
