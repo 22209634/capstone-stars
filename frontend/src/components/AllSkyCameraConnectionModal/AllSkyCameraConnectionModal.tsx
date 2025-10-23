@@ -3,7 +3,7 @@ import './AllSkyCameraConnectionModal.css';
 import allSkyCameraAPI, { type UsbCamera, type AscomCamera } from '@/services/allSkyCameraAPI';
 import Button from '@/components/Button/Button';
 import Panel from '@/components/Panel/Panel';
-import { Camera, Loader, Wifi } from 'lucide-react';
+import { Camera, Loader, Wifi, Image } from 'lucide-react';
 import { useAllSkyCameraContext } from '@/contexts/AllSkyCameraContext';
 
 interface AllSkyCameraConnectionModalProps {
@@ -20,7 +20,7 @@ export default function AllSkyCameraConnectionModal({ isOpen, onClose }: AllSkyC
   const [error, setError] = useState<string | null>(null);
 
   // Selection states
-  const [selectedType, setSelectedType] = useState<'usb' | 'ascom' | 'ip' | null>(null);
+  const [selectedType, setSelectedType] = useState<'usb' | 'ascom' | 'ip' | 'placeholder' | null>(null);
   const [selectedUsbCamera, setSelectedUsbCamera] = useState<UsbCamera | null>(null);
   const [selectedAscomCamera, setSelectedAscomCamera] = useState<AscomCamera | null>(null);
   const [ipStreamUrl, setIpStreamUrl] = useState<string>('');
@@ -82,6 +82,17 @@ export default function AllSkyCameraConnectionModal({ isOpen, onClose }: AllSkyC
     setError(null);
 
     try {
+      if (selectedType === 'placeholder') {
+        // User selected to keep the placeholder image
+        setConnectedCameraType(null);
+        setConnectedCameraName(null);
+        setCameraConnected(false);
+        setStreamUrl(null);
+        setUsbCameraId(null);
+        onClose();
+        return;
+      }
+
       if (selectedType === 'usb' && selectedUsbCamera) {
         const response = await allSkyCameraAPI.connectCamera({
           cameraType: 'usb',
@@ -280,6 +291,33 @@ export default function AllSkyCameraConnectionModal({ isOpen, onClose }: AllSkyC
               Example: rtsp://admin:password@192.168.1.100:554/stream
             </p>
           </div>
+
+          {/* Placeholder Section */}
+          <div className="camera-section">
+            <h3>
+              <Image size={20} />
+              Use Placeholder Image
+            </h3>
+            <p className="placeholder-description">
+              Keep using the 2MASS all-sky survey image. You can change this later by clicking the image.
+            </p>
+            <div
+              className={`placeholder-option ${selectedType === 'placeholder' ? 'selected' : ''}`}
+              onClick={() => {
+                setSelectedType('placeholder');
+                setSelectedUsbCamera(null);
+                setSelectedAscomCamera(null);
+              }}
+            >
+              <div className="placeholder-info">
+                <h4>2MASS All-Sky Survey</h4>
+                <p className="placeholder-details">Static wide-field sky view</p>
+              </div>
+              {selectedType === 'placeholder' && (
+                <div className="selected-indicator">✓</div>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="modal-footer">
@@ -294,10 +332,10 @@ export default function AllSkyCameraConnectionModal({ isOpen, onClose }: AllSkyC
             {connecting ? (
               <>
                 <Loader className="spinner" size={16} />
-                Connecting...
+                {selectedType === 'placeholder' ? 'Applying...' : 'Connecting...'}
               </>
             ) : (
-              'Connect to Camera'
+              selectedType === 'placeholder' ? 'Use Placeholder' : 'Connect to Camera'
             )}
           </Button>
         </div>
