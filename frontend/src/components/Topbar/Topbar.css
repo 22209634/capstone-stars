@@ -23,6 +23,25 @@
     color: white;
 }
 
+.capture-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.gallery-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    min-width: auto;
+    color: white;
+    background-color: #8b5cf6;
+}
+
+.gallery-btn:hover {
+    background-color: #7c3aed;
+}
+
 .menu-btn {
     display: flex;
     align-items: center;

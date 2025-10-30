@@ -76,6 +76,17 @@ class CameraAPI {
   async getCameraStatus(): Promise<APIResponse<CameraStatus>> {
     return this.makeRequest<CameraStatus>('/camera/status');
   }
+
+  async captureImage(exposure: number = 0.1): Promise<Blob> {
+    const url = `${this.baseURL}/camera/capture?exposure=${exposure}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`Failed to capture image: ${response.statusText}`);
+    }
+
+    return response.blob();
+  }
 }
 
 const cameraAPI = new CameraAPI();

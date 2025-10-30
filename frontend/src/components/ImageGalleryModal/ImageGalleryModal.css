@@ -1,0 +1,103 @@
+.image-gallery-modal {
+  max-width: 900px;
+  width: 90vw;
+  max-height: 80vh;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border-color, #333);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-color, #fff);
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+
+.modal-close-btn:hover {
+  opacity: 0.7;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  max-height: calc(80vh - 80px);
+}
+
+.no-images-message {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary, #aaa);
+}
+
+.image-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.gallery-image-card {
+  background: var(--panel-bg, #1a1a1a);
+  border: 1px solid var(--border-color, #333);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.gallery-image-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.gallery-image-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  display: block;
+}
+
+.image-info {
+  padding: 0.75rem;
+}
+
+.image-coordinates {
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-color, #fff);
+}
+
+.image-metadata {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #aaa);
+}
+
+.image-mode {
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 0.2rem 0.4rem;
+  background: var(--accent-color, #0066cc);
+  border-radius: 3px;
+  font-size: 0.7rem;
+}
+
+.image-timestamp {
+  font-size: 0.75rem;
+}
