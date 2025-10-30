@@ -9,6 +9,8 @@ import TelescopeStatus from "@/components/TelescopeStatus/TelescopeStatus.tsx";
 import TelescopeControls from "@/components/TelescopeControls/TelescopeControls.tsx";
 import CollapsiblePanel from "@/components/CollapsiblePanel/CollapsiblePanel.tsx";
 import { TelescopeProvider, useTelescopeContext } from "@/contexts/TelescopeContext";
+import { CameraProvider } from "@/contexts/CameraContext";
+import { AllSkyCameraProvider } from "@/contexts/AllSkyCameraContext";
 
 function DashboardContent() {
     const { connectionMode } = useTelescopeContext();
@@ -38,13 +40,11 @@ function DashboardContent() {
                     </section>
                 </div>
                 <div className="dashboard__menus__right">
-                    {connectionMode === 'simulation' && (
-                        <section className="allsky-view">
-                            <CollapsiblePanel side="right">
-                                <AllSkyView />
-                            </CollapsiblePanel>
-                        </section>
-                    )}
+                    <section className="allsky-view">
+                        <CollapsiblePanel side="right">
+                            <AllSkyView />
+                        </CollapsiblePanel>
+                    </section>
                     <section className="telescope-status">
                         <CollapsiblePanel side="right">
                             <TelescopeStatus />
@@ -64,7 +64,11 @@ function DashboardContent() {
 export default function Dashboard() {
     return (
         <TelescopeProvider>
-            <DashboardContent />
+            <CameraProvider>
+                <AllSkyCameraProvider>
+                    <DashboardContent />
+                </AllSkyCameraProvider>
+            </CameraProvider>
         </TelescopeProvider>
     );
 }

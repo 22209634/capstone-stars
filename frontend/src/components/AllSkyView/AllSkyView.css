@@ -1,10 +1,114 @@
 .allsky-view__wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 16px;
+    overflow: hidden;
 }
 
-.allsky-view__wrapper img {
+.allsky-view__wrapper.clickable {
+    cursor: pointer;
+}
+
+.allsky-view__wrapper.clickable:hover .allsky-view__overlay {
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+.allsky-view__placeholder {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.allsky-view__placeholder img {
     width: 100%;
     height: 100%;
     border-radius: 16px;
     box-shadow: 0 0 20px rgba(255, 215, 100, 0.06),
                 0 0 40px rgba(255, 215, 100, 0.03);
+}
+
+.allsky-view__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background-color: rgba(0, 0, 0, 0.5);
+    transition: background-color 0.3s;
+    border-radius: 16px;
+}
+
+.allsky-view__overlay p {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: white;
+}
+
+.allsky-view__camera-feed {
+    position: relative;
+    width: 100%;
+    min-height: 2rem;
+    height: 100%;
+}
+
+.allsky-view__camera-feed .camera-frame {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 16px;
+}
+
+.camera-overlay {
+    padding: 0 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), transparent);
+    border-radius: 16px 16px 0 0;
+}
+
+.camera-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.disconnect-btn {
+    --border-radius: 3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    background-color: rgba(239, 68, 68, 0.8);
+}
+
+.disconnect-btn:hover {
+    background-color: rgba(220, 38, 38, 0.9);
+}
+
+.allsky-view__connecting {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 16px;
+}
+
+.allsky-view__connecting p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
 }
