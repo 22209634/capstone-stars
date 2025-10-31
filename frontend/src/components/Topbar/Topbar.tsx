@@ -4,12 +4,15 @@ import Button from '@/components/Button/Button.tsx'
 import StatusLine from '@/components/Topbar/StatusLine/StatusLine.tsx'
 import TelescopeConnectionModal from '@/components/TelescopeConnectionModal/TelescopeConnectionModal'
 import ImageGalleryModal, { type CapturedImage } from '@/components/ImageGalleryModal/ImageGalleryModal'
-import { Camera, Telescope, Wifi, Images } from 'lucide-react'
-import { useState } from 'react'
+import CelestialObjectModal from '@/components/CelestialObjectModal/CelestialObjectModal'
+import { Camera, Telescope, Wifi, Images, Search } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
 import { useTelescopeContext } from '@/contexts/TelescopeContext'
 import { useCameraContext } from '@/contexts/CameraContext'
 import telescopeAPI, { type AscomDevice } from '@/services/telescopeAPI'
 import cameraAPI from '@/services/cameraAPI'
+import searchAPI from '@/services/searchAPI'
+import type { AstronomicalObject } from '@/types/objectList.types'
 
 export default function Topbar() {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,6 +20,15 @@ export default function Topbar() {
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     const [capturedImages, setCapturedImages] = useState<CapturedImage[]>([]);
     const [isCapturing, setIsCapturing] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<AstronomicalObject[]>([]);
+    const [showSearchResults, setShowSearchResults] = useState(false);
+    const [isSearching, setIsSearching] = useState(false);
+    const [selectedObject, setSelectedObject] = useState<AstronomicalObject | null>(null);
+    const [isObjectModalOpen, setIsObjectModalOpen] = useState(false);
+    const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const searchContainerRef = useRef<HTMLDivElement>(null);
+
     const { connectionMode, setConnectionMode, connectedDevice, setConnectedDevice, ra, dec, aladinInstance } = useTelescopeContext();
     const { setCameraConnected, setConnectedCamera, cameraConnected } = useCameraContext();
 
@@ -64,6 +76,64 @@ export default function Topbar() {
             console.error('Disconnect error:', error);
         }
     };
+
+    // Search handlers
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const query = e.target.value;
+        setSearchQuery(query);
+
+        // Clear previous timeout
+        if (searchTimeoutRef.current) {
+            clearTimeout(searchTimeoutRef.current);
+        }
+
+        // Don't search if query is empty
+        if (!query.trim()) {
+            setSearchResults([]);
+            setShowSearchResults(false);
+            return;
+        }
+
+        // Debounce search - wait 500ms after user stops typing
+        setIsSearching(true);
+        searchTimeoutRef.current = setTimeout(async () => {
+            try {
+                const response = await searchAPI.searchObjects(query, 5);
+                if (response.success) {
+                    setSearchResults(response.data);
+                    setShowSearchResults(true);
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+            } finally {
+                setIsSearching(false);
+            }
+        }, 500);
+    };
+
+    const handleSearchResultClick = (obj: AstronomicalObject) => {
+        setSelectedObject(obj);
+        setIsObjectModalOpen(true);
+        setShowSearchResults(false);
+        setSearchQuery('');
+    };
+
+    const handleObjectModalClose = () => {
+        setIsObjectModalOpen(false);
+        setSelectedObject(null);
+    };
+
+    // Close search results when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+                setShowSearchResults(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const handleCapture = async () => {
         setIsCapturing(true);
@@ -123,7 +193,43 @@ export default function Topbar() {
                     <h1 className="logo">STARS System v0.1</h1>
                     <StatusLine />
                     <div className="topbar-right">
-                        <input type="text" placeholder=" Search..." />
+                        <div className="search-container" ref={searchContainerRef}>
+                            <div className="search-input-wrapper">
+                                <Search size={16} className="search-icon" />
+                                <input
+                                    type="text"
+                                    placeholder="Search by name (e.g., Andromeda, M31) or coordinates (e.g., 10.68 +41.27)..."
+                                    value={searchQuery}
+                                    onChange={handleSearchChange}
+                                    className="search-input"
+                                />
+                                {isSearching && <span className="search-loading">...</span>}
+                            </div>
+                            {isSearching && (
+                                <div className="search-results-dropdown">
+                                    <div className="search-loading-message">Searching SIMBAD database...</div>
+                                </div>
+                            )}
+                            {!isSearching && showSearchResults && searchResults.length > 0 && (
+                                <div className="search-results-dropdown">
+                                    {searchResults.map((obj, index) => (
+                                        <div
+                                            key={`${obj.name}-${index}`}
+                                            className="search-result-item"
+                                            onClick={() => handleSearchResultClick(obj)}
+                                        >
+                                            <div className="search-result-name">{obj.name}</div>
+                                            <div className="search-result-type">{obj.object_type || 'Unknown'}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {!isSearching && showSearchResults && searchResults.length === 0 && (
+                                <div className="search-results-dropdown">
+                                    <div className="search-no-results">No results found</div>
+                                </div>
+                            )}
+                        </div>
 
                         {connectionMode === 'simulation' ? (
                             <Button
@@ -176,6 +282,12 @@ export default function Topbar() {
                 isOpen={isGalleryOpen}
                 onClose={() => setIsGalleryOpen(false)}
                 images={capturedImages}
+            />
+
+            <CelestialObjectModal
+                isOpen={isObjectModalOpen}
+                onClose={handleObjectModalClose}
+                object={selectedObject}
             />
         </>
     )

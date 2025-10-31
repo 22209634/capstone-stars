@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Query, HTTPException
 from typing import Optional
 from pydantic import BaseModel
-from app.services.simbad import visible_objects_bundoora
+from app.services.simbad import visible_objects_bundoora, search_objects
 from app.services.weather_data import get_weather_status
 from app.services.ascom_alpaca import ascom_client, ascom_camera_client
 from app.services.usb_camera import usb_camera_service
@@ -43,6 +43,20 @@ def get_visible_objects(
         return {"count": len(objects), "data": objects}
     except Exception as e:
         return {"error": str(e)}
+
+@router.get("/search")
+def search_astronomical_objects(
+    query: str = Query(..., description="Search term for astronomical object"),
+    max_results: int = Query(5, description="Maximum number of results to return")
+):
+    """
+    Search for astronomical objects by name using SIMBAD.
+    """
+    try:
+        objects = search_objects(query, max_results)
+        return {"success": True, "count": len(objects), "data": objects}
+    except Exception as e:
+        return {"success": False, "error": str(e), "data": []}
 
 @router.get("/weather")
 def get_weather():
