@@ -1,5 +1,3 @@
-// Partially Authored by Claude Code
-
 import React, { createContext, useContext, useState, useRef, useEffect, type ReactNode } from 'react';
 import telescopeAPI from '@/services/telescopeAPI';
 

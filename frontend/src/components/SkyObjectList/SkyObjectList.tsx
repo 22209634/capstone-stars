@@ -1,10 +1,24 @@
 import './SkyObjectList.css';
-import React from 'react';
+import React, { useState } from 'react';
 import Panel from '@/components/Panel/Panel.tsx'
+import CelestialObjectModal from '@/components/CelestialObjectModal/CelestialObjectModal';
 import { useVisibleObjects } from '../../hooks/useVisibleObjects';
+import type { AstronomicalObject } from '@/types/objectList.types';
 
 export default function SkyObjectList() {
     const { objects, loading, error } = useVisibleObjects();
+    const [selectedObject, setSelectedObject] = useState<AstronomicalObject | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const handleObjectClick = (obj: AstronomicalObject) => {
+        setSelectedObject(obj);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setSelectedObject(null);
+    };
 
     if (loading) {
         return (
@@ -40,13 +54,23 @@ export default function SkyObjectList() {
                 <Panel className="sky-object-list__items-panel" borderRadius="3px">
                     <ul className="sky-object-list__list">
                         {displayObjects.map((obj, index) => (
-                            <li key={`${obj.name}-${index}`} className="sky-object-list__item">
+                            <li
+                                key={`${obj.name}-${index}`}
+                                className="sky-object-list__item"
+                                onClick={() => handleObjectClick(obj)}
+                            >
                                 {obj.name}
                             </li>
                         ))}
                     </ul>
                 </Panel>
             </Panel>
+
+            <CelestialObjectModal
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+                object={selectedObject}
+            />
         </>
     );
 }

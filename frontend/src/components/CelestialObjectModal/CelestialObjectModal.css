@@ -1,0 +1,78 @@
+.celestial-object-modal {
+  max-width: 500px;
+  width: 90vw;
+  max-height: 80vh;
+}
+
+.object-details {
+  margin-bottom: 1.5rem;
+}
+
+.detail-section {
+  margin-bottom: 1.5rem;
+}
+
+.detail-section h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.1rem;
+  color: var(--text-color, #fff);
+  border-bottom: 1px solid var(--border-color, #333);
+  padding-bottom: 0.5rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  font-weight: 500;
+  color: var(--text-secondary, #aaa);
+  font-size: 0.9rem;
+}
+
+.detail-value {
+  color: var(--text-color, #fff);
+  font-family: 'Courier New', monospace;
+  font-size: 0.95rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color, #333);
+}
+
+.track-btn {
+  background: #3b82f6;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background 0.2s, transform 0.1s;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.track-btn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.track-btn:active {
+  transform: translateY(0);
+}
