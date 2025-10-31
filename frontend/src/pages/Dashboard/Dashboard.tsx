@@ -5,6 +5,7 @@ import AscomVideoFeed from "@/components/AscomVideoFeed/AscomVideoFeed.tsx";
 import AllSkyView from "@/components/AllSkyView/AllSkyView.tsx";
 import SkyObjectList from "@/components/SkyObjectList/SkyObjectList.tsx";
 import WeatherData from "@/components/WeatherData/WeatherData.tsx";
+import WeatherAlerts from "@/components/WeatherAlerts/WeatherAlerts.tsx";
 import TelescopeStatus from "@/components/TelescopeStatus/TelescopeStatus.tsx";
 import TelescopeControls from "@/components/TelescopeControls/TelescopeControls.tsx";
 import CollapsiblePanel from "@/components/CollapsiblePanel/CollapsiblePanel.tsx";
@@ -37,6 +38,7 @@ function DashboardContent() {
                         <CollapsiblePanel side="left">
                             <WeatherData />
                         </CollapsiblePanel>
+                        <WeatherAlerts />
                     </section>
                 </div>
                 <div className="dashboard__menus__right">

@@ -49,3 +49,7 @@
     width: 70%;
     margin-left: auto;
 }
+
+.weather-data {
+    position: relative;
+}
