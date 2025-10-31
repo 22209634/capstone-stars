@@ -12,6 +12,7 @@
   "dependencies": {
     "@react-three/fiber": "^9.4.0",
     "@types/three": "^0.180.0",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.542.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

@@ -63,9 +63,8 @@ export default function TelescopeControls() {
         isHoldingRef[1](false);
     };
 
-    // In ASCOM mode, buttons are disabled when not tracking
-    // In simulation mode, buttons are always enabled
-    const buttonsDisabled = connectionMode === 'ascom' && !isTracking;
+    // Movement buttons are always enabled in both modes
+    const buttonsDisabled = false;
 
     return (
         <>

@@ -2,6 +2,7 @@
   max-width: 900px;
   width: 90vw;
   max-height: 80vh;
+  position: relative;
 }
 
 .modal-header {
@@ -15,6 +16,33 @@
 .modal-header h2 {
   margin: 0;
   font-size: 1.5rem;
+}
+
+.modal-footer {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1.5rem;
+}
+
+.download-btn {
+  background: #10b981;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.download-btn:hover {
+  background: #059669;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
 }
 
 .modal-close-btn {
@@ -56,12 +84,35 @@
   border: 1px solid var(--border-color, #333);
   border-radius: 8px;
   overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  cursor: pointer;
+  position: relative;
 }
 
 .gallery-image-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.gallery-image-card.selected {
+  border: 3px solid #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.selection-indicator {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #3b82f6;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .gallery-image-card img {
