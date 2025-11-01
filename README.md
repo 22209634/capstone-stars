@@ -1,7 +1,7 @@
 # STARS Telescope Interface
 
 ## About
-STARS is a web-based telescope control interface that enables remote operation of telescopes. The application provides live camera feeds, automated (Planned) photography, and celestial object tracking. When no telescope is connected, it operates in planetarium/simulation mode for planning and demonstration purposes.
+STARS is a web-based telescope control interface that enables remote operation of telescopes. The application provides live camera feeds, astrophotography, and celestial object tracking. When no telescope is connected, it operates in planetarium/simulation mode for planning and demonstration purposes.
 
 ## Demo
 
